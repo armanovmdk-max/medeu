@@ -3,173 +3,206 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>AgroAssist AI — Holographic Background</title>
+<title>AgroAssist AI — цифровое поле, которое думает за вас</title>
 <style>
   :root{
-    --holo-cyan:#00E5FF;
-    --holo-blue:#0A84FF;
-    --agro-green:#23F5A6;
-    --agro-gold:#FFC34D;
-    --bg-deep:#03070D;
-    --glass:rgba(8,18,28,0.32);
-    --glass-brd:rgba(120,220,255,0.22);
+    --blue:#1488D8;
+    --teal:#0E9C9C;
+    --green:#16A66B;
+    --gold:#D9952B;
+    --bg:#F5F9FC;
+    --ink:#0E2A3B;        /* headings */
+    --ink-soft:#4A6678;   /* body */
+    --ink-mut:#6E8A9C;    /* labels */
+    --glass:rgba(255,255,255,0.58);
+    --glass-strong:rgba(255,255,255,0.78);
+    --glass-brd:rgba(255,255,255,0.85);
+    --line:rgba(20,80,130,0.10);
+    --shadow:0 18px 44px rgba(20,80,130,0.14);
+    --shadow-sm:0 8px 24px rgba(20,80,130,0.10);
     --mono:"SF Mono",ui-monospace,"Roboto Mono","JetBrains Mono",Menlo,Consolas,monospace;
     --sans:Inter,"Segoe UI",system-ui,-apple-system,sans-serif;
   }
   *{box-sizing:border-box;margin:0;padding:0}
-  html,body{width:100%;height:100%;overflow:hidden;background:var(--bg-deep)}
+  html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);
+    font-family:var(--sans);color:var(--ink);-webkit-font-smoothing:antialiased}
 
   /* ---------- BACKGROUND LAYER (the "video") ---------- */
   #agro-bg{
     position:fixed;inset:0;z-index:0;
-    /* Fallback gradient if WebGL is unavailable */
+    /* fallback if WebGL is unavailable */
     background:
-      radial-gradient(1200px 700px at 50% 18%, rgba(10,132,255,0.18), transparent 60%),
-      radial-gradient(900px 600px at 80% 90%, rgba(35,245,166,0.10), transparent 60%),
-      radial-gradient(900px 600px at 15% 85%, rgba(255,195,77,0.08), transparent 60%),
-      var(--bg-deep);
+      radial-gradient(1100px 640px at 50% 12%, rgba(20,136,216,0.10), transparent 62%),
+      radial-gradient(820px 560px at 82% 88%, rgba(22,166,107,0.08), transparent 60%),
+      radial-gradient(760px 520px at 14% 86%, rgba(217,149,43,0.07), transparent 60%),
+      var(--bg);
   }
   #agro-canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
 
-  /* readability + depth tint so foreground UI never competes with the scene */
+  /* light vignette: whitens edges so the scene stays calm + content readable */
   #agro-veil{
     position:fixed;inset:0;z-index:1;pointer-events:none;
     background:
-      radial-gradient(140% 100% at 50% 0%, transparent 38%, rgba(3,7,13,0.55) 100%),
-      linear-gradient(180deg, rgba(3,7,13,0.35) 0%, transparent 22%, transparent 60%, rgba(3,7,13,0.72) 100%);
-    mix-blend-mode:normal;
-  }
-  /* fine scanlines for the FUI feel */
-  #agro-scan{
-    position:fixed;inset:0;z-index:2;pointer-events:none;opacity:.35;
-    background:repeating-linear-gradient(180deg, rgba(120,220,255,0.04) 0 1px, transparent 1px 3px);
-    mix-blend-mode:overlay;
+      radial-gradient(125% 95% at 50% 6%, rgba(245,249,252,0) 42%, rgba(245,249,252,0.62) 100%),
+      linear-gradient(180deg, rgba(245,249,252,0.55) 0%, transparent 16%, transparent 66%, rgba(245,249,252,0.9) 100%);
   }
 
-  /* ---------- FLOATING HOLOGRAPHIC HUD PANELS ---------- */
+  /* ---------- TOP NAV ---------- */
+  .nav{position:fixed;z-index:5;top:0;left:0;right:0;display:flex;align-items:center;
+    justify-content:space-between;gap:24px;padding:18px clamp(18px,5vw,56px)}
+  .brand{display:flex;align-items:center;gap:11px;font-weight:700;font-size:18px;letter-spacing:-.01em;color:var(--ink)}
+  .brand b{color:var(--blue);font-weight:700}
+  .logo{width:30px;height:30px;border-radius:9px;position:relative;
+    background:conic-gradient(from 210deg, var(--blue), var(--teal), var(--green), var(--gold), var(--blue));
+    box-shadow:var(--shadow-sm)}
+  .logo::after{content:"";position:absolute;inset:6px;border-radius:5px;background:var(--bg);
+    box-shadow:inset 0 0 0 2px rgba(255,255,255,.6)}
+  .links{display:flex;gap:30px}
+  .links a{font-size:14.5px;color:var(--ink-soft);text-decoration:none;transition:.2s}
+  .links a:hover{color:var(--ink)}
+  .nav-cta{display:flex;align-items:center;gap:12px}
+  .btn{font-size:14px;font-weight:600;text-decoration:none;padding:11px 20px;border-radius:11px;
+    transition:.22s;white-space:nowrap}
+  .btn.ghost{color:var(--ink);background:var(--glass);border:1px solid var(--glass-brd);
+    backdrop-filter:blur(12px);box-shadow:var(--shadow-sm)}
+  .btn.ghost:hover{background:var(--glass-strong)}
+  .btn.primary{color:#fff;background:linear-gradient(120deg,var(--blue),var(--teal));
+    box-shadow:0 10px 26px rgba(14,140,156,.30)}
+  .btn.primary:hover{transform:translateY(-1px);box-shadow:0 14px 32px rgba(14,140,156,.42)}
+  @media(max-width:880px){.links{display:none}}
+
+  /* ---------- FLOATING HOLOGRAPHIC HUD PANELS (light glass) ---------- */
   .hud{position:fixed;z-index:3;pointer-events:none;font-family:var(--mono)}
   .panel{
-    pointer-events:none;
-    background:var(--glass);
-    border:1px solid var(--glass-brd);
-    border-radius:14px;
-    padding:12px 14px;
-    backdrop-filter:blur(14px) saturate(120%);
-    -webkit-backdrop-filter:blur(14px) saturate(120%);
-    box-shadow:0 0 0 1px rgba(0,229,255,0.06) inset, 0 8px 40px rgba(0,40,70,0.35);
-    color:#cfeefc;
-    min-width:150px;
-    overflow:hidden;
+    position:absolute;pointer-events:none;min-width:158px;
+    background:var(--glass);border:1px solid var(--glass-brd);border-left:3px solid var(--blue);
+    border-radius:16px;padding:13px 15px;
+    backdrop-filter:blur(16px) saturate(140%);-webkit-backdrop-filter:blur(16px) saturate(140%);
+    box-shadow:var(--shadow), inset 0 1px 0 rgba(255,255,255,.85);
+    color:var(--ink);
   }
-  .panel::before{ /* corner bracket accents */
-    content:"";position:absolute;top:6px;left:6px;width:12px;height:12px;
-    border-top:1px solid var(--holo-cyan);border-left:1px solid var(--holo-cyan);opacity:.7;
-  }
-  .panel::after{
-    content:"";position:absolute;bottom:6px;right:6px;width:12px;height:12px;
-    border-bottom:1px solid var(--holo-cyan);border-right:1px solid var(--holo-cyan);opacity:.7;
-  }
-  .panel .k{font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;color:#7fd9f5;opacity:.85}
-  .panel .v{font-size:22px;font-weight:600;line-height:1.1;margin-top:2px;
-    color:#eafcff;text-shadow:0 0 10px rgba(0,229,255,.45)}
-  .panel .v small{font-size:11px;opacity:.7;font-weight:400}
-  .panel .sub{font-size:9.5px;margin-top:4px;color:#8fe9c8}
-  .panel.green .v{text-shadow:0 0 10px rgba(35,245,166,.45)}
-  .panel.gold .v{text-shadow:0 0 10px rgba(255,195,77,.5)}
-  .panel.green::before,.panel.green::after{border-color:var(--agro-green)}
-  .panel.gold::before,.panel.gold::after{border-color:var(--agro-gold)}
+  .panel.green{border-left-color:var(--green)}
+  .panel.gold{border-left-color:var(--gold)}
+  .panel .k{font-size:9.5px;letter-spacing:.13em;text-transform:uppercase;color:var(--ink-mut)}
+  .panel .v{font-family:var(--sans);font-size:23px;font-weight:700;line-height:1.05;margin-top:3px;color:var(--ink)}
+  .panel .v small{font-size:11px;font-weight:600}
+  .panel .up{color:var(--green)} .panel .dn{color:#D6534F}
+  .panel .sub{font-size:9.5px;margin-top:5px;color:var(--ink-soft)}
+  .bar{height:4px;margin-top:9px;border-radius:4px;background:rgba(20,80,130,.10);overflow:hidden}
+  .bar > i{display:block;height:100%;border-radius:4px;
+    background:linear-gradient(90deg,var(--blue),var(--teal));animation:fill 6s ease-in-out infinite alternate}
+  .green .bar > i{background:linear-gradient(90deg,var(--teal),var(--green))}
+  .gold  .bar > i{background:linear-gradient(90deg,var(--gold),#E9B45E)}
+  @keyframes fill{from{width:44%}to{width:88%}}
 
-  /* tiny inline sparkline bar */
-  .bar{height:3px;margin-top:8px;border-radius:3px;background:rgba(120,220,255,.12);overflow:hidden}
-  .bar > i{display:block;height:100%;border-radius:3px;
-    background:linear-gradient(90deg,var(--holo-blue),var(--holo-cyan));
-    box-shadow:0 0 8px var(--holo-cyan);animation:fill 6s ease-in-out infinite alternate}
-  .green .bar > i{background:linear-gradient(90deg,#0f9e6c,var(--agro-green));box-shadow:0 0 8px var(--agro-green)}
-  .gold  .bar > i{background:linear-gradient(90deg,#c9881f,var(--agro-gold));box-shadow:0 0 8px var(--agro-gold)}
-  @keyframes fill{from{width:42%}to{width:88%}}
-
-  /* gentle float so panels feel like holograms */
-  @keyframes floatA{0%,100%{transform:translateY(0)}50%{transform:translateY(-9px)}}
+  @keyframes floatA{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
   @keyframes floatB{0%,100%{transform:translateY(0)}50%{transform:translateY(7px)}}
   .f-a{animation:floatA 9s ease-in-out infinite}
   .f-b{animation:floatB 11s ease-in-out infinite}
   .f-c{animation:floatA 13s ease-in-out infinite}
 
-  .p1{top:13%;left:4%}
-  .p2{top:30%;right:5%}
-  .p3{bottom:20%;left:6%}
-  .p4{bottom:14%;right:7%}
-  .p5{top:15%;right:24%}
+  .p1{top:19%;left:3.5%}
+  .p2{top:33%;right:4%}
+  .p3{bottom:21%;left:5%}
+  .p4{bottom:15%;right:6%}
+  .p5{top:18%;right:22%}
+  @media(max-width:1180px){.p5{display:none}}
+  @media(max-width:880px){.p2,.p3{display:none}}
 
-  /* crop field tags near the bottom — small, dimmed, non-distracting */
-  .crops{position:fixed;z-index:3;left:50%;bottom:5%;transform:translateX(-50%);
-    display:flex;gap:10px;flex-wrap:wrap;justify-content:center;pointer-events:none;font-family:var(--mono)}
-  .tag{display:flex;align-items:center;gap:7px;font-size:10px;letter-spacing:.06em;
-    color:#bfeefc;background:rgba(8,18,28,0.28);border:1px solid rgba(120,220,255,0.16);
-    border-radius:999px;padding:6px 12px;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
-  .tag .dot{width:7px;height:7px;border-radius:50%;box-shadow:0 0 8px currentColor}
-  .tag b{font-weight:600}
-  .tag .st{opacity:.6}
-
-  /* ---------- DEMO FOREGROUND (your real site goes here) ---------- */
+  /* ---------- HERO (your real content) ---------- */
   #site{position:fixed;z-index:4;inset:0;display:flex;flex-direction:column;
-    align-items:center;justify-content:center;text-align:center;pointer-events:none;padding:24px}
-  #site .brand{font-family:var(--mono);font-size:12px;letter-spacing:.5em;
-    text-transform:uppercase;color:#7fd9f5;opacity:.85}
-  #site h1{font-family:var(--sans);font-weight:700;font-size:clamp(34px,6.4vw,76px);
-    line-height:1.04;margin-top:14px;color:#f3fbff;letter-spacing:-.02em;
-    text-shadow:0 2px 30px rgba(0,120,180,.45)}
-  #site h1 .accent{background:linear-gradient(120deg,var(--holo-cyan),var(--agro-green) 60%,var(--agro-gold));
+    align-items:center;justify-content:center;text-align:center;pointer-events:none;padding:90px 24px 0}
+  .eyebrow{display:inline-flex;align-items:center;gap:9px;font-family:var(--mono);font-size:11.5px;
+    letter-spacing:.1em;text-transform:uppercase;color:var(--ink-soft);
+    background:var(--glass);border:1px solid var(--glass-brd);border-radius:999px;padding:8px 15px;
+    backdrop-filter:blur(12px);box-shadow:var(--shadow-sm)}
+  .eyebrow .pulse{width:8px;height:8px;border-radius:50%;background:var(--green);
+    box-shadow:0 0 0 0 rgba(22,166,107,.55);animation:pulse 2.2s ease-out infinite}
+  @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(22,166,107,.5)}70%{box-shadow:0 0 0 9px rgba(22,166,107,0)}100%{box-shadow:0 0 0 0 rgba(22,166,107,0)}}
+  #site h1{font-weight:800;font-size:clamp(36px,6.6vw,78px);line-height:1.02;margin-top:22px;
+    letter-spacing:-.025em;color:var(--ink);max-width:14ch}
+  #site h1 .accent{background:linear-gradient(110deg,var(--blue),var(--teal) 45%,var(--green));
     -webkit-background-clip:text;background-clip:text;color:transparent}
-  #site p{font-family:var(--sans);margin-top:16px;max-width:560px;color:#a7c6d6;
-    font-size:clamp(14px,1.7vw,18px);line-height:1.6}
-  #site .cta{pointer-events:auto;margin-top:28px;display:inline-flex;gap:12px}
-  #site .cta a{font-family:var(--sans);font-size:14px;font-weight:600;text-decoration:none;
-    padding:13px 26px;border-radius:12px;transition:.25s}
-  #site .cta .primary{color:#021018;background:linear-gradient(120deg,var(--holo-cyan),var(--agro-green));
-    box-shadow:0 8px 30px rgba(0,200,200,.3)}
-  #site .cta .primary:hover{transform:translateY(-2px);box-shadow:0 12px 38px rgba(0,200,200,.45)}
-  #site .cta .ghost{color:#cfeefc;border:1px solid rgba(120,220,255,.3);
-    background:rgba(8,18,28,.3);backdrop-filter:blur(8px)}
+  #site p{margin-top:20px;max-width:580px;color:var(--ink-soft);font-size:clamp(15px,1.8vw,19px);line-height:1.6}
+  .cta{pointer-events:auto;margin-top:30px;display:inline-flex;gap:14px;flex-wrap:wrap;justify-content:center}
+  .cta .btn{font-size:15px;padding:14px 28px}
+  .cta .play{display:inline-flex;align-items:center;gap:9px}
+  .cta .play .tri{width:0;height:0;border-left:9px solid var(--blue);border-top:6px solid transparent;border-bottom:6px solid transparent}
+  .trust{margin-top:40px;display:flex;gap:clamp(20px,4vw,46px);align-items:center;flex-wrap:wrap;justify-content:center}
+  .trust .it{display:flex;flex-direction:column;align-items:center;gap:3px}
+  .trust .n{font-weight:800;font-size:clamp(20px,2.4vw,28px);color:var(--ink);letter-spacing:-.02em}
+  .trust .l{font-family:var(--mono);font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-mut)}
+  .trust .div{width:1px;height:34px;background:var(--line)}
+  @media(max-width:560px){.trust .div{display:none}}
 
-  /* perf / motion preferences */
+  /* ---------- CROP FIELD TAGS ---------- */
+  .crops{position:fixed;z-index:3;left:50%;bottom:4.5%;transform:translateX(-50%);
+    display:flex;gap:10px;flex-wrap:wrap;justify-content:center;pointer-events:none;font-family:var(--mono)}
+  .tag{display:flex;align-items:center;gap:8px;font-size:10.5px;letter-spacing:.03em;color:var(--ink);
+    background:var(--glass);border:1px solid var(--glass-brd);border-radius:999px;padding:7px 14px;
+    backdrop-filter:blur(12px);box-shadow:var(--shadow-sm)}
+  .tag .dot{width:8px;height:8px;border-radius:50%}
+  .tag b{font-weight:700} .tag .st{color:var(--ink-soft)}
+
   @media (prefers-reduced-motion: reduce){
-    .f-a,.f-b,.f-c,.bar>i{animation:none}
+    .f-a,.f-b,.f-c,.bar>i,.eyebrow .pulse{animation:none}
   }
-  .loading{position:fixed;z-index:5;inset:0;display:flex;align-items:center;justify-content:center;
-    font-family:var(--mono);color:#7fd9f5;letter-spacing:.3em;font-size:11px;transition:opacity .6s}
+  .loading{position:fixed;z-index:6;inset:0;display:flex;align-items:center;justify-content:center;
+    font-family:var(--mono);color:var(--ink-mut);letter-spacing:.28em;font-size:11px;
+    background:var(--bg);transition:opacity .6s}
 </style>
 </head>
 <body>
   <!-- ============ LIVE BACKGROUND ("video") ============ -->
   <div id="agro-bg"><canvas id="agro-canvas"></canvas></div>
   <div id="agro-veil"></div>
-  <div id="agro-scan"></div>
+
+  <!-- ============ TOP NAV ============ -->
+  <header class="nav">
+    <div class="brand"><span class="logo"></span> AgroAssist&nbsp;<b>AI</b></div>
+    <nav class="links">
+      <a href="#">Платформа</a><a href="#">Технологии</a><a href="#">Культуры</a><a href="#">Тарифы</a>
+    </nav>
+    <div class="nav-cta">
+      <a class="btn ghost" href="#">Войти</a>
+      <a class="btn primary" href="#">Запросить демо</a>
+    </div>
+  </header>
 
   <!-- ============ FLOATING HOLOGRAPHIC PANELS ============ -->
   <div class="hud">
-    <div class="panel p1 f-a"><div class="k">NDVI · здоровье посевов</div><div class="v">0.72 <small>▲ +4%</small></div><div class="bar"><i></i></div></div>
-    <div class="panel green p2 f-b"><div class="k">Влажность почвы</div><div class="v">64<small>%</small></div><div class="sub">оптимально · корнеобитаемый слой</div><div class="bar"><i></i></div></div>
+    <div class="panel p1 f-a"><div class="k">NDVI · здоровье посевов</div><div class="v">0.72 <small class="up">▲ +4%</small></div><div class="bar"><i></i></div></div>
+    <div class="panel green p2 f-b"><div class="k">Влажность почвы</div><div class="v">64<small>%</small></div><div class="sub">оптимум · корнеобитаемый слой</div><div class="bar"><i></i></div></div>
     <div class="panel gold p3 f-c"><div class="k">Прогноз урожайности</div><div class="v">4.8 <small>т/га</small></div><div class="sub">+0.6 к плану сезона</div></div>
     <div class="panel p4 f-a"><div class="k">Активные агро-дроны</div><div class="v">5 <small>/ скан 96%</small></div><div class="sub">лазерное сканирование · NDRE</div><div class="bar"><i></i></div></div>
-    <div class="panel green p5 f-b"><div class="k">Площадь под мониторингом</div><div class="v">12 480 <small>га</small></div></div>
+    <div class="panel green p5 f-b"><div class="k">Площадь мониторинга</div><div class="v">12 480 <small>га</small></div></div>
   </div>
+
+  <!-- ============ HERO CONTENT ============ -->
+  <main id="site">
+    <div class="eyebrow"><span class="pulse"></span> ИИ-агроном · мониторинг в реальном времени</div>
+    <h1>Цифровое поле, которое <span class="accent">думает за вас</span></h1>
+    <p>Спутники, дроны и искусственный интеллект объединяют каждый гектар в одну живую модель урожая — от всходов до уборки.</p>
+    <div class="cta">
+      <a class="btn primary" href="#">Начать бесплатно</a>
+      <a class="btn ghost play" href="#"><span class="tri"></span> Смотреть демо</a>
+    </div>
+    <div class="trust">
+      <div class="it"><span class="n">12 480 га</span><span class="l">под управлением</span></div>
+      <div class="div"></div>
+      <div class="it"><span class="n">5 культур</span><span class="l">в одном дашборде</span></div>
+      <div class="div"></div>
+      <div class="it"><span class="n">96%</span><span class="l">точность сканирования</span></div>
+    </div>
+  </main>
 
   <!-- ============ CROP FIELD TAGS ============ -->
   <div class="crops">
-    <div class="tag"><span class="dot" style="color:#FFC34D"></span><b>Подсолнечник</b><span class="st">· 2–4 листа</span></div>
-    <div class="tag"><span class="dot" style="color:#E8D98A"></span><b>Пшеница</b><span class="st">· кущение</span></div>
-    <div class="tag"><span class="dot" style="color:#23F5A6"></span><b>Нут</b><span class="st">· ранняя вегетация</span></div>
-    <div class="tag"><span class="dot" style="color:#7BE8B8"></span><b>Чечевица</b><span class="st">· начальный рост</span></div>
-    <div class="tag"><span class="dot" style="color:#5FD08A"></span><b>Горох</b><span class="st">· ранняя вегетация</span></div>
-  </div>
-
-  <!-- ============ DEMO SITE CONTENT (replace with your real UI) ============ -->
-  <div id="site">
-    <div class="brand">AgroAssist&nbsp;AI</div>
-    <h1>Цифровое поле,<br/><span class="accent">которое думает за вас</span></h1>
-    <p>Голографический центр управления хозяйством: спутники, дроны и ИИ объединяют каждый гектар в одну живую модель урожая.</p>
-    <div class="cta"><a class="primary" href="#">Начать бесплатно</a><a class="ghost" href="#">Смотреть демо</a></div>
+    <div class="tag"><span class="dot" style="background:#D9952B"></span><b>Подсолнечник</b><span class="st">· 2–4 листа</span></div>
+    <div class="tag"><span class="dot" style="background:#C9A14A"></span><b>Пшеница</b><span class="st">· кущение</span></div>
+    <div class="tag"><span class="dot" style="background:#16A66B"></span><b>Нут</b><span class="st">· ранняя вегетация</span></div>
+    <div class="tag"><span class="dot" style="background:#4FBE8A"></span><b>Чечевица</b><span class="st">· начальный рост</span></div>
+    <div class="tag"><span class="dot" style="background:#34A86B"></span><b>Горох</b><span class="st">· ранняя вегетация</span></div>
   </div>
 
   <div class="loading" id="loading">ИНИЦИАЛИЗАЦИЯ ГОЛОГРАММЫ ПОЛЯ…</div>
@@ -198,6 +231,5 @@
     console.error(e);
   }
   </script>
-
 </body>
 </html>

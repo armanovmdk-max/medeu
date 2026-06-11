@@ -39,10 +39,10 @@ export default function AgroHologramBackground({ className, style }) {
         inset: 0,
         zIndex: 0,
         background:
-          'radial-gradient(1200px 700px at 50% 18%, rgba(10,132,255,0.18), transparent 60%),' +
-          'radial-gradient(900px 600px at 80% 90%, rgba(35,245,166,0.10), transparent 60%),' +
-          'radial-gradient(900px 600px at 15% 85%, rgba(255,195,77,0.08), transparent 60%),' +
-          '#03070D',
+          'radial-gradient(1100px 640px at 50% 12%, rgba(20,136,216,0.10), transparent 62%),' +
+          'radial-gradient(820px 560px at 82% 88%, rgba(22,166,107,0.08), transparent 60%),' +
+          'radial-gradient(760px 520px at 14% 86%, rgba(217,149,43,0.07), transparent 60%),' +
+          '#F5F9FC',
         ...style,
       }}
     >
@@ -50,15 +50,15 @@ export default function AgroHologramBackground({ className, style }) {
         ref={canvasRef}
         style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', display: 'block' }}
       />
-      {/* readability veil so foreground UI never competes with the scene */}
+      {/* light vignette: whitens edges so foreground UI never competes with the scene */}
       <div
         style={{
           position: 'absolute',
           inset: 0,
           pointerEvents: 'none',
           background:
-            'radial-gradient(140% 100% at 50% 0%, transparent 38%, rgba(3,7,13,0.55) 100%),' +
-            'linear-gradient(180deg, rgba(3,7,13,0.35) 0%, transparent 22%, transparent 60%, rgba(3,7,13,0.72) 100%)',
+            'radial-gradient(125% 95% at 50% 6%, rgba(245,249,252,0) 42%, rgba(245,249,252,0.62) 100%),' +
+            'linear-gradient(180deg, rgba(245,249,252,0.55) 0%, transparent 16%, transparent 66%, rgba(245,249,252,0.9) 100%)',
         }}
       />
     </div>

@@ -1,13 +1,16 @@
-// AgroAssist AI — holographic field background (Three.js).
+// AgroAssist AI — holographic field background (Three.js) · LIGHT THEME.
 // Single source of truth used by both index.html (static, via importmap)
 // and AgroHologramBackground.jsx (bundler resolves `three` from npm).
 //
-// `three/addons/*` resolves to `three/examples/jsm/*` in npm builds, and is
-// remapped to ./vendor/jsm/ by the importmap in index.html.
+// Light-theme note: neon/additive blending is invisible on a bright page, so
+// this scene uses SATURATED colours + NORMAL blending and very subtle bloom —
+// the holographic read comes from colour + soft depth fog, not glow.
 import * as THREE from 'three';
 import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
 import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
 import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+
+const BG = 0xF5F9FC; // page colour the scene fades into (airy depth)
 
 /**
  * Mount the animated holographic background onto a <canvas>.
@@ -16,14 +19,15 @@ import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js'
  * @returns {{ dispose: () => void }}
  */
 export function mountAgroHologram(canvas, opts = {}) {
+  // saturated, light-visible palette
   const COLORS = {
-    cyan:  new THREE.Color('#00E5FF'),
-    blue:  new THREE.Color('#0A84FF'),
-    green: new THREE.Color('#23F5A6'),
-    gold:  new THREE.Color('#FFC34D'),
-    wheat: new THREE.Color('#E8D98A'),
-    pea:   new THREE.Color('#5FD08A'),
-    lentil:new THREE.Color('#7BE8B8'),
+    blue:  new THREE.Color('#1488D8'),
+    teal:  new THREE.Color('#0E9C9C'),
+    green: new THREE.Color('#16A66B'),
+    gold:  new THREE.Color('#D9952B'),
+    wheat: new THREE.Color('#C9A14A'),
+    pea:   new THREE.Color('#34A86B'),
+    lentil:new THREE.Color('#4FBE8A'),
   };
 
   // 5 crop bands across X — order matches the on-screen legend
@@ -35,28 +39,25 @@ export function mountAgroHologram(canvas, opts = {}) {
     { name:'pea',       color:COLORS.pea,    x: 20 },
   ];
   const FIELD_LEN = 220;   // depth of scrolling field
-  const SCROLL = 7.0;      // world units / sec toward camera => "flying forward"
+  const SCROLL = 6.0;      // world units / sec toward camera => "flying forward"
 
-  const renderer = new THREE.WebGLRenderer({ canvas, antialias:true, powerPreference:'high-performance' });
-  renderer.setClearColor(0x03070d, 1);
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias:true, alpha:true, powerPreference:'high-performance' });
+  renderer.setClearColor(BG, 1);
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 
   const scene = new THREE.Scene();
-  scene.fog = new THREE.FogExp2(0x03070d, 0.018);
+  scene.fog = new THREE.FogExp2(BG, 0.021); // fade distant field into the light page
 
-  const camera = new THREE.PerspectiveCamera(60, 1, 0.1, 600);
+  const camera = new THREE.PerspectiveCamera(58, 1, 0.1, 600);
   camera.position.set(0, 7.5, 26);
   camera.lookAt(0, 2.5, -30);
-
-  scene.add(new THREE.HemisphereLight(0x0a3a55, 0x020308, 0.6));
-  const key = new THREE.PointLight(0x00e5ff, 0.6, 200); key.position.set(0,40,30); scene.add(key);
 
   // ---- 1) holographic ground: infinite scrolling grid, coloured by band ----
   const groundMat = new THREE.ShaderMaterial({
     transparent:true, depthWrite:false,
     uniforms:{
       uTime:{value:0}, uScroll:{value:0},
-      uCyan:{value:COLORS.cyan}, uGreen:{value:COLORS.green}, uGold:{value:COLORS.gold},
+      uBlue:{value:COLORS.blue}, uGreen:{value:COLORS.green}, uGold:{value:COLORS.gold},
     },
     vertexShader:`
       varying vec3 vWorld;
@@ -69,7 +70,7 @@ export function mountAgroHologram(canvas, opts = {}) {
       precision highp float;
       varying vec3 vWorld;
       uniform float uTime, uScroll;
-      uniform vec3 uCyan, uGreen, uGold;
+      uniform vec3 uBlue, uGreen, uGold;
       float gridLine(vec2 p, float scale){
         vec2 c = p*scale;
         vec2 g = abs(fract(c-0.5)-0.5)/fwidth(c);
@@ -78,47 +79,46 @@ export function mountAgroHologram(canvas, opts = {}) {
       void main(){
         vec2 p = vWorld.xz; p.y += uScroll;
         float fine  = gridLine(p, 1.0);
-        float coarse= gridLine(p, 0.2)*1.4;
-        float g = clamp(fine*0.5 + coarse, 0.0, 1.6);
+        float coarse= gridLine(p, 0.2)*1.5;
+        float g = clamp(fine*0.45 + coarse, 0.0, 1.4);
         float band = vWorld.x;
         vec3 col;
         if(band < -15.0)      col = uGold;
-        else if(band < -5.0)  col = mix(uGold, uGreen, 0.35);
+        else if(band < -5.0)  col = mix(uGold, uGreen, 0.4);
         else if(band < 5.0)   col = uGreen;
-        else if(band < 15.0)  col = mix(uGreen, uCyan, 0.5);
-        else                  col = uCyan;
-        col = mix(col, uCyan, 0.25);
+        else if(band < 15.0)  col = mix(uGreen, uBlue, 0.5);
+        else                  col = uBlue;
+        // running data-pulse wave: brighter, more opaque highlight toward blue
         float wave = exp(-pow(fract(p.y*0.012 - uTime*0.05)-0.5,2.0)*60.0);
-        col += uCyan * wave * 0.5;
+        col = mix(col, uBlue, wave*0.55);
         float dist = length(vWorld.xz - vec2(0.0, 18.0));
         float fade = smoothstep(150.0, 18.0, dist);
         float near = smoothstep(2.0, 16.0, abs(vWorld.z-18.0));
-        float a = g * fade * (0.35 + 0.65*near);
-        gl_FragColor = vec4(col * (0.7 + g*0.8), a);
+        float a = clamp((g*0.5 + wave*0.45) * fade * (0.30 + 0.70*near), 0.0, 0.85);
+        gl_FragColor = vec4(col, a);
       }`
   });
   const ground = new THREE.Mesh(new THREE.PlaneGeometry(260, FIELD_LEN, 1,1), groundMat);
   ground.rotation.x = -Math.PI/2; ground.position.z = -60;
   scene.add(ground);
 
-  // data-stream strips between fields
-  const streamGeo = new THREE.PlaneGeometry(0.5, FIELD_LEN);
+  // data-stream strips between fields (saturated, normal blend)
+  const streamGeo = new THREE.PlaneGeometry(0.4, FIELD_LEN);
   const streams = [];
   for(let i=0;i<BANDS.length+1;i++){
-    const m = new THREE.MeshBasicMaterial({ color:0x00e5ff, transparent:true, opacity:0,
-      blending:THREE.AdditiveBlending, depthWrite:false });
+    const m = new THREE.MeshBasicMaterial({ color:0x0E9C9C, transparent:true, opacity:0, depthWrite:false });
     const s = new THREE.Mesh(streamGeo, m);
     s.rotation.x = -Math.PI/2; s.position.set(-25 + i*10, 0.02, -60);
     s.userData.phase = i*0.7; streams.push(s); scene.add(s);
   }
 
-  // ---- 2) crops: instanced glowing sprouts that scroll & recycle (seamless) ----
+  // ---- 2) crops: instanced sprouts that scroll & recycle (seamless) ----
   const ROWS = 26, PER_ROW = 7;
   const TOTAL = BANDS.length * ROWS * PER_ROW;
   const sprout = new THREE.ConeGeometry(0.16, 0.95, 5, 1, true);
   sprout.translate(0, 0.47, 0);
-  const cropMat = new THREE.MeshBasicMaterial({ vertexColors:true, transparent:true, opacity:0.92,
-    blending:THREE.AdditiveBlending, depthWrite:false, side:THREE.DoubleSide });
+  const cropMat = new THREE.MeshBasicMaterial({ vertexColors:true, transparent:true, opacity:0.9,
+    depthWrite:false, side:THREE.DoubleSide });
   const crops = new THREE.InstancedMesh(sprout, cropMat, TOTAL);
   crops.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
   const cropZ = new Float32Array(TOTAL), cropX = new Float32Array(TOTAL), cropS = new Float32Array(TOTAL);
@@ -129,7 +129,7 @@ export function mountAgroHologram(canvas, opts = {}) {
       cropX[idx] = b.x + (k-(PER_ROW-1)/2)*1.15 + (Math.random()-0.5)*0.4;
       cropZ[idx] = -(r/ROWS)*FIELD_LEN + (Math.random()-0.5)*2.2;
       cropS[idx] = 0.55 + Math.random()*0.7;                 // early-growth = small
-      crops.setColorAt(idx, b.color.clone().multiplyScalar(0.8+Math.random()*0.5));
+      crops.setColorAt(idx, b.color.clone().multiplyScalar(0.85+Math.random()*0.3));
       idx++;
     }
   }
@@ -142,33 +142,32 @@ export function mountAgroHologram(canvas, opts = {}) {
   const beamGeo = new THREE.ConeGeometry(0.9, 8, 12, 1, true); beamGeo.translate(0,-4,0);
   for(let i=0;i<5;i++){
     const grp = new THREE.Group();
-    const body = new THREE.Mesh(droneGeo, new THREE.MeshBasicMaterial({color:0xbfeefc}));
+    const body = new THREE.Mesh(droneGeo, new THREE.MeshBasicMaterial({color:0x2A4A5C}));
     const ring = new THREE.Mesh(new THREE.TorusGeometry(1.1,0.05,8,28),
-      new THREE.MeshBasicMaterial({color:0x00e5ff, transparent:true, opacity:0.9}));
+      new THREE.MeshBasicMaterial({color:0x0E9C9C, transparent:true, opacity:0.9}));
     ring.rotation.x = Math.PI/2;
     const beam = new THREE.Mesh(beamGeo, new THREE.MeshBasicMaterial({
-      color:0x23f5a6, transparent:true, opacity:0.18, blending:THREE.AdditiveBlending, depthWrite:false }));
+      color:0x16A66B, transparent:true, opacity:0.14, depthWrite:false }));
     grp.add(body, ring, beam);
     grp.userData = { r:13+i*3.2, a:i*1.3, speed:0.12+i*0.015, h:9+(i%2)*2.5, beam };
     scene.add(grp); drones.push(grp);
   }
 
-  // ---- 4) atmospheric data motes ----
-  const MOTES=420; const mGeo=new THREE.BufferGeometry();
+  // ---- 4) atmospheric data motes (slate, visible on light) ----
+  const MOTES=380; const mGeo=new THREE.BufferGeometry();
   const mPos=new Float32Array(MOTES*3);
   for(let i=0;i<MOTES;i++){
     mPos[i*3]=(Math.random()-0.5)*120; mPos[i*3+1]=Math.random()*26; mPos[i*3+2]=-Math.random()*FIELD_LEN;
   }
   mGeo.setAttribute('position', new THREE.BufferAttribute(mPos,3));
   const motes=new THREE.Points(mGeo, new THREE.PointsMaterial({
-    color:0x9fe8ff, size:0.12, transparent:true, opacity:0.6,
-    blending:THREE.AdditiveBlending, depthWrite:false }));
+    color:0x4A7A98, size:0.11, transparent:true, opacity:0.5, depthWrite:false }));
   scene.add(motes);
 
-  // ---- post: neon bloom ----
+  // ---- post: very subtle bloom (only the brightest highlights) ----
   const composer = new EffectComposer(renderer);
   composer.addPass(new RenderPass(scene, camera));
-  composer.addPass(new UnrealBloomPass(new THREE.Vector2(1,1), 0.85, 0.6, 0.16));
+  composer.addPass(new UnrealBloomPass(new THREE.Vector2(1,1), 0.25, 0.5, 0.6));
 
   function resize(){
     const w = canvas.clientWidth || window.innerWidth;
@@ -209,13 +208,13 @@ export function mountAgroHologram(canvas, opts = {}) {
     }
     crops.instanceMatrix.needsUpdate = true;
 
-    for(const s of streams) s.material.opacity = 0.10 + Math.abs(Math.sin(t*0.8 + s.userData.phase))*0.22;
+    for(const s of streams) s.material.opacity = 0.06 + Math.abs(Math.sin(t*0.8 + s.userData.phase))*0.16;
 
     for(const d of drones){
       const u=d.userData; u.a += dt*u.speed;
       d.position.set(Math.cos(u.a)*u.r, u.h + Math.sin(u.a*2)*0.6, -40 + Math.sin(u.a)*u.r);
       d.rotation.y += dt*0.6;
-      u.beam.material.opacity = 0.10 + Math.abs(Math.sin(t*3 + u.a))*0.18;
+      u.beam.material.opacity = 0.08 + Math.abs(Math.sin(t*3 + u.a))*0.14;
     }
 
     const mp = motes.geometry.attributes.position.array;
