@@ -33,6 +33,14 @@
     overflow:hidden;
   }
   #field{position:absolute; inset:0; width:100%; height:100%; display:block}
+  /* real video background — hidden until a playable source is confirmed */
+  #hero-video{
+    position:absolute; inset:0; width:100%; height:100%;
+    object-fit:cover; object-position:center 40%;
+    opacity:0; transition:opacity 1.2s ease; z-index:0; background:#1a0f04;
+  }
+  #stage.has-video #hero-video{opacity:1}
+  #stage.has-video #field{opacity:0; transition:opacity 1.2s ease}
 
   /* grain + grade overlays */
   #grade{
@@ -208,6 +216,13 @@
 
 <!-- ===== Cinematic stage ===== -->
 <div id="stage">
+  <!-- Real video background. Auto-shows if a file exists (or is chosen via the
+       "🎬 Видео-фон" button); otherwise the procedural canvas below plays. -->
+  <video id="hero-video" muted loop playsinline preload="auto"
+         poster="" crossorigin="anonymous">
+    <source src="assets/field-promo.webm" type="video/webm">
+    <source src="assets/field-promo.mp4" type="video/mp4">
+  </video>
   <canvas id="field"></canvas>
   <div id="grade"></div>
   <div id="vignette"></div>
@@ -263,8 +278,10 @@
   <div class="ctrls">
     <button id="btnPlay" title="Пауза / Воспроизведение">⏸</button>
     <button id="btnReplay" title="С начала">⟲</button>
-    <span class="label">КИНО-ПРОМО · 24с цикл</span>
+    <button id="btnVideo" title="Видео-фон: загрузить свой клип">🎬</button>
+    <span class="label" id="modeLabel">КИНО-ПРОМО · процедурное поле</span>
   </div>
+  <input type="file" id="videoFile" accept="video/*" hidden>
 </div>
 <div class="scroll-hint">Листайте вниз ↓</div>
 
@@ -751,6 +768,65 @@
     }
     requestAnimationFrame(draw);
   });
+})();
+
+
+/* =========================================================================
+   Real video background. Plays an actual clip when one is available —
+   either bundled at assets/field-promo.(webm|mp4) or chosen by the user via
+   the 🎬 button (works fully offline, no upload/hosting). Falls back to the
+   procedural canvas field when no video can play.
+   ========================================================================= */
+(function(){
+  const stage = document.getElementById('stage');
+  const video = document.getElementById('hero-video');
+  const btn   = document.getElementById('btnVideo');
+  const picker= document.getElementById('videoFile');
+  const label = document.getElementById('modeLabel');
+  let active = false;
+
+  function activate(src){
+    active = true;
+    stage.classList.add('has-video');
+    btn.style.color = 'var(--gold)'; btn.style.borderColor = 'var(--gold)';
+    label.textContent = 'КИНО-ПРОМО · видео-фон';
+    if(window.__field) window.__field.pause(true);     // stop the canvas, save CPU
+    video.play().catch(()=>{});
+  }
+  function fallbackToCanvas(){
+    if(active) return;
+    stage.classList.remove('has-video');
+    if(window.__field) window.__field.pause(false);
+  }
+
+  // Try the bundled source(s). If none exist (404 / unsupported) keep canvas.
+  video.addEventListener('canplay', ()=>activate('bundled'), {once:false});
+  video.addEventListener('error', fallbackToCanvas);
+  // kick the load now (sources are declared in markup)
+  try{ video.load(); }catch(e){}
+
+  // User picks any local clip → instant cinematic video background, offline.
+  btn.addEventListener('click', ()=>picker.click());
+  picker.addEventListener('change', ()=>{
+    const f = picker.files && picker.files[0];
+    if(!f) return;
+    // drop declared <source> children and play the chosen file
+    [...video.querySelectorAll('source')].forEach(s=>s.remove());
+    video.src = URL.createObjectURL(f);
+    video.load();
+    const go = ()=>{ activate('user'); video.removeEventListener('canplay', go); };
+    video.addEventListener('canplay', go);
+    video.play().catch(()=>{});
+  });
+
+  // Pause the video while reading the page; resume at the top. Keep the hidden
+  // canvas paused too so we never burn CPU on an invisible scene.
+  window.addEventListener('scroll', ()=>{
+    if(!active) return;
+    const past = window.scrollY > window.innerHeight*0.35;
+    if(past) video.pause(); else video.play().catch(()=>{});
+    if(window.__field) window.__field.pause(true);
+  }, {passive:true});
 })();
 </script>
 </body>
