@@ -1,0 +1,634 @@
+<!doctype html>
+<html lang="ru" data-theme="light">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Agro-Logistics — Дашборд склада · ASB Group</title>
+<meta name="description" content="ASB Group · ТОО «АгроСервис-Батыс». Учёт ТМЦ, заявки, техника — премиальный анимированный glassmorphism-дашборд управления агроскладом." />
+<style>
+/* ============================================================
+   Agro-Logistics Dashboard — self-contained, no dependencies
+   Light premium glassmorphism + dark "ops" theme
+   Animated: living field bg, pollen motes, entrance choreography,
+   count-up numbers, drawing charts, cursor spotlight, view-transitions
+   ============================================================ */
+:root{
+  --gold:#f6c447; --amber:#e08a1e; --deep:#7a3d09; --green:#2f7d32;
+  --green-2:#3ba14a; --cream:#fff6e2;
+  --bg:#eef3ec;
+  --ink:#16261b; --ink-soft:#4a5b50; --ink-mute:#7c8a80;
+  --panel:rgba(255,255,255,.62); --panel-2:rgba(255,255,255,.5); --panel-line:rgba(255,255,255,.7);
+  --border:rgba(22,38,27,.10);
+  --accent:#1f9d55; --accent-ink:#fff;
+  --ok:#16a34a; --warn:#e08a1e; --bad:#dc2626; --info:#2563eb;
+  --shadow:0 18px 50px -18px rgba(20,40,25,.45);
+  --shadow-sm:0 8px 24px -12px rgba(20,40,25,.4);
+  --glow:rgba(31,157,85,.45);
+  --radius:20px; --radius-sm:14px; --blur:18px;
+  --font:"Inter","Segoe UI",system-ui,-apple-system,"Helvetica Neue",Arial,sans-serif;
+}
+[data-theme="dark"]{
+  --bg:#0a1410;
+  --ink:#eaf3ec; --ink-soft:#a9bcb0; --ink-mute:#7d9286;
+  --panel:rgba(20,34,27,.55); --panel-2:rgba(16,28,22,.5); --panel-line:rgba(120,200,150,.14);
+  --border:rgba(150,220,170,.12);
+  --accent:#37c46f; --accent-ink:#04130a;
+  --shadow:0 24px 60px -22px rgba(0,0,0,.7); --shadow-sm:0 10px 30px -16px rgba(0,0,0,.6);
+  --glow:rgba(55,196,111,.5); --blur:20px;
+}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%}
+body{
+  font-family:var(--font); color:var(--ink); background:var(--bg);
+  -webkit-font-smoothing:antialiased; overflow-x:hidden;
+  font-feature-settings:"tnum" 1, "cv05" 1;
+}
+a{color:inherit;text-decoration:none}
+button{font-family:inherit;cursor:pointer}
+h1,h2,h3,p{margin:0}
+:focus-visible{outline:2.5px solid var(--accent);outline-offset:2px;border-radius:6px}
+
+/* ---------- living agro background ---------- */
+#bg{position:fixed;inset:0;z-index:-2;overflow:hidden}
+#bg .layer{position:absolute;inset:-6% -6%;will-change:transform}
+#bg .sky{
+  background:
+    radial-gradient(80% 60% at 78% 6%, rgba(255,235,170,.95), rgba(255,235,170,0) 55%),
+    linear-gradient(180deg,#bfe2ff 0%, #dff0d6 38%, #f4e6a6 64%, #e9b85a 100%);
+}
+[data-theme="dark"] #bg .sky{
+  background:
+    radial-gradient(70% 55% at 80% 4%, rgba(120,200,140,.18), rgba(0,0,0,0) 55%),
+    linear-gradient(180deg,#06120d 0%, #0a1b12 55%, #0e2417 100%);
+}
+/* slow moving sun glow / aurora */
+#bg .aurora{
+  background:radial-gradient(40% 38% at 78% 8%, rgba(255,224,150,.85), rgba(255,224,150,0) 70%);
+  mix-blend-mode:screen;
+}
+[data-theme="dark"] #bg .aurora{background:radial-gradient(46% 40% at 30% 18%, rgba(60,200,120,.25), rgba(0,0,0,0) 70%)}
+#bg .field{left:-12%;right:-12%;bottom:-8%;top:auto;filter:blur(2px)}
+#bg .f1{background:radial-gradient(120% 100% at 50% 100%, #c98a23, #e0a93a 55%, rgba(224,169,58,0) 100%);height:42%;opacity:.9}
+#bg .f2{background:radial-gradient(120% 100% at 40% 100%, #7faa2e, #9cc24a 60%, rgba(156,194,74,0) 100%);height:30%;bottom:12%;opacity:.85}
+[data-theme="dark"] #bg .f1{background:radial-gradient(120% 100% at 50% 100%, #143021, #0c2016 60%, rgba(0,0,0,0));opacity:.9}
+[data-theme="dark"] #bg .f2{background:radial-gradient(120% 100% at 40% 100%, #163a24, #102a1a 60%, rgba(0,0,0,0));opacity:.8}
+#motes{position:absolute;inset:0;width:100%;height:100%}
+#bg .blur-veil{position:absolute;inset:0;backdrop-filter:blur(26px);background:rgba(255,255,255,.16)}
+[data-theme="dark"] #bg .blur-veil{background:rgba(4,12,8,.44)}
+@media (prefers-reduced-motion:no-preference){
+  #bg .aurora{animation:aurora 18s ease-in-out infinite alternate}
+}
+@keyframes aurora{from{transform:translate3d(-3%,-1%,0) scale(1)}to{transform:translate3d(4%,2%,0) scale(1.08)}}
+/* sun god-rays */
+#bg .rays{background:repeating-conic-gradient(from 0deg at 80% 7%, rgba(255,240,190,.11) 0deg 2.4deg, transparent 2.4deg 12deg);mix-blend-mode:screen;opacity:.7}
+[data-theme="dark"] #bg .rays{background:repeating-conic-gradient(from 0deg at 30% 14%, rgba(80,220,140,.07) 0deg 2.4deg, transparent 2.4deg 14deg);opacity:.8}
+@media (prefers-reduced-motion:no-preference){#bg .rays{animation:rayspin 70s linear infinite}}
+@keyframes rayspin{to{transform:rotate(360deg)}}
+/* scanning agro-drone — flies OVER the dashboard as a HUD scanner */
+#drone{position:fixed;top:11%;left:0;width:72px;height:44px;z-index:45;pointer-events:none;
+  color:var(--amber);filter:drop-shadow(0 0 12px rgba(224,138,30,.85))}
+[data-theme="dark"] #drone{color:#6effa0;filter:drop-shadow(0 0 16px rgba(94,255,150,.9))}
+#drone svg{width:72px;height:44px;position:relative;z-index:2;display:block}
+#drone .beam{position:absolute;top:32px;left:50%;width:120px;height:54vh;transform:translateX(-50%);transform-origin:top center;
+  background:linear-gradient(180deg, currentColor, transparent 80%);opacity:.16;clip-path:polygon(45% 0,55% 0,100% 100%,0 100%);filter:blur(4px)}
+@media (prefers-reduced-motion:no-preference){
+  #drone{animation:fly 20s linear infinite}
+  #drone .beam{animation:scan 3.2s ease-in-out infinite}
+}
+@media (prefers-reduced-motion:reduce){#drone{display:none}}
+@keyframes fly{0%{transform:translate(-14vw,0)}48%{transform:translate(50vw,30px)}52%{transform:translate(54vw,30px)}100%{transform:translate(114vw,0)}}
+@keyframes scan{0%,100%{transform:translateX(-50%) skewX(-10deg)}50%{transform:translateX(-50%) skewX(10deg)}}
+/* HUD scanline overlay */
+#hud{position:fixed;inset:0;z-index:60;pointer-events:none;overflow:hidden;
+  background:repeating-linear-gradient(0deg, rgba(120,200,150,.05) 0 1px, transparent 1px 5px);mix-blend-mode:overlay;opacity:.35}
+[data-theme="dark"] #hud{opacity:.5}
+#hud::after{content:"";position:absolute;left:0;right:0;height:160px;
+  background:linear-gradient(180deg, transparent, rgba(120,230,160,.12), transparent)}
+@media (prefers-reduced-motion:no-preference){#hud::after{animation:scanv 8s linear infinite}}
+@media (prefers-reduced-motion:reduce){#hud{display:none}}
+@keyframes scanv{0%{transform:translateY(-180px)}100%{transform:translateY(100vh)}}
+
+/* ---------- entrance choreography ---------- */
+[data-reveal]{opacity:0;transform:translateY(26px) scale(.985);filter:blur(6px);
+  transition:opacity .6s ease, transform .75s cubic-bezier(.2,.75,.2,1), filter .6s ease}
+[data-reveal].in{opacity:1;transform:none;filter:none}
+@media (prefers-reduced-motion:reduce){
+  [data-reveal]{opacity:1!important;transform:none!important;filter:none!important;transition:none}
+}
+
+/* ---------- shell ---------- */
+.app{max-width:1320px;margin:0 auto;padding:0 clamp(14px,3vw,34px) 60px}
+
+/* topbar */
+header.top{
+  position:sticky;top:0;z-index:50;display:flex;align-items:center;gap:18px;
+  padding:14px clamp(14px,3vw,34px);margin:0 0 22px;
+  background:var(--panel);backdrop-filter:blur(var(--blur));-webkit-backdrop-filter:blur(var(--blur));
+  border-bottom:1px solid var(--border);
+}
+.brand{display:flex;align-items:center;gap:12px;font-weight:800;letter-spacing:.3px}
+.brand .mark{
+  width:40px;height:40px;border-radius:12px;display:grid;place-items:center;
+  background:conic-gradient(from 210deg,var(--gold),var(--amber),var(--green),var(--gold));
+  box-shadow:0 8px 20px -6px rgba(224,138,30,.6);color:#16261b
+}
+@media (prefers-reduced-motion:no-preference){.brand .mark{animation:spin 14s linear infinite}}
+@keyframes spin{to{filter:hue-rotate(20deg)}}
+.brand .mark svg{width:22px;height:22px}
+.brand b{font-size:16px;line-height:1}
+.brand small{display:block;font-size:10.5px;font-weight:600;letter-spacing:2.5px;color:var(--ink-mute);margin-top:3px}
+nav.menu{display:flex;gap:4px;margin-left:10px}
+nav.menu a{padding:9px 14px;border-radius:11px;font-size:13.5px;font-weight:600;color:var(--ink-soft);
+  display:flex;align-items:center;gap:7px;transition:background .2s,color .2s,transform .2s}
+nav.menu a svg{width:16px;height:16px;opacity:.8}
+nav.menu a:hover{background:var(--panel-2);color:var(--ink);transform:translateY(-1px)}
+nav.menu a.active{background:var(--accent);color:var(--accent-ink);box-shadow:var(--shadow-sm)}
+nav.menu a.active svg{opacity:1}
+.spacer{flex:1}
+.icon-btn{width:42px;height:42px;border-radius:12px;border:1px solid var(--border);background:var(--panel-2);
+  display:grid;place-items:center;color:var(--ink-soft);transition:.2s;position:relative}
+.icon-btn:hover{color:var(--ink);border-color:var(--accent);transform:translateY(-1px)}
+.icon-btn:active{transform:scale(.94)}
+.icon-btn svg{width:19px;height:19px}
+.icon-btn .dot{position:absolute;top:8px;right:9px;width:8px;height:8px;border-radius:50%;background:var(--bad);border:2px solid var(--panel)}
+@media (prefers-reduced-motion:no-preference){.icon-btn .dot{animation:ping 2.4s ease-out infinite}}
+@keyframes ping{0%{box-shadow:0 0 0 0 rgba(220,38,38,.6)}70%,100%{box-shadow:0 0 0 7px rgba(220,38,38,0)}}
+.user{display:flex;align-items:center;gap:10px;padding:5px 14px 5px 6px;border-radius:999px;border:1px solid var(--border);background:var(--panel-2)}
+.user .av{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--green),var(--gold));display:grid;place-items:center;color:#16261b;font-weight:800;font-size:13px}
+.user .nm{font-size:13px;font-weight:700;line-height:1.15}
+.user .rl{font-size:11px;color:var(--ink-mute)}
+.burger{display:none}
+#theme svg{transition:transform .5s cubic-bezier(.2,.7,.2,1)}
+#theme:hover svg{transform:rotate(35deg)}
+
+/* page head */
+.pagehead{display:flex;align-items:flex-end;gap:18px;flex-wrap:wrap;margin-bottom:8px}
+.pagehead .title{display:flex;align-items:center;gap:14px}
+.pagehead .ic{width:52px;height:52px;border-radius:16px;display:grid;place-items:center;background:var(--panel);border:1px solid var(--panel-line);box-shadow:var(--shadow-sm);color:var(--accent)}
+@media (prefers-reduced-motion:no-preference){.pagehead .ic svg{animation:gear 9s linear infinite;transform-origin:center}}
+@keyframes gear{to{transform:rotate(360deg)}}
+.pagehead .ic svg{width:26px;height:26px}
+.pagehead h1{font-size:clamp(26px,4vw,38px);font-weight:800;letter-spacing:-.02em}
+.pagehead .sub{font-size:13.5px;color:var(--ink-soft);margin-top:3px}
+.pagehead .sub b{color:var(--ink)}
+
+/* section tabs */
+.segtabs{display:flex;gap:6px;margin-left:auto;background:var(--panel);border:1px solid var(--panel-line);padding:5px;border-radius:14px;box-shadow:var(--shadow-sm)}
+.segtabs button{border:0;background:transparent;padding:9px 16px;border-radius:10px;font-weight:700;font-size:13px;color:var(--ink-soft);
+  display:flex;align-items:center;gap:8px;transition:color .2s,background .35s,transform .2s}
+.segtabs button:hover{transform:translateY(-1px)}
+.segtabs button svg{width:16px;height:16px}
+.segtabs button.active{background:var(--accent);color:var(--accent-ink);box-shadow:var(--shadow-sm)}
+nav.menu a.active,.segtabs button.active{
+  background-image:linear-gradient(115deg,var(--accent),var(--green-2),var(--gold),var(--accent));background-size:260% 100%;
+  box-shadow:0 6px 22px -6px var(--glow)}
+@media (prefers-reduced-motion:no-preference){nav.menu a.active,.segtabs button.active{animation:shift 4.5s linear infinite}}
+@keyframes shift{to{background-position:260% 0}}
+
+/* status strip */
+.strip{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin:20px 0 22px;padding:13px 18px;border-radius:var(--radius-sm);
+  background:var(--panel);border:1px solid var(--panel-line);box-shadow:var(--shadow-sm);font-size:13.5px;color:var(--ink-soft)}
+.strip .live{display:flex;align-items:center;gap:8px;font-weight:700;color:var(--ink)}
+.strip .pulse{width:9px;height:9px;border-radius:50%;background:var(--ok)}
+@media (prefers-reduced-motion:no-preference){.strip .pulse{animation:pulse 2s infinite}}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(22,163,74,.5)}70%{box-shadow:0 0 0 9px rgba(22,163,74,0)}100%{box-shadow:0 0 0 0 rgba(22,163,74,0)}}
+.strip .danger{color:var(--bad);font-weight:700}
+.strip .sep{color:var(--ink-mute)}
+
+/* ---------- glass card ---------- */
+.card{background:var(--panel);border:1px solid var(--panel-line);border-radius:var(--radius);
+  backdrop-filter:blur(var(--blur));-webkit-backdrop-filter:blur(var(--blur));
+  box-shadow:var(--shadow);position:relative;overflow:hidden;
+  transition:transform .3s cubic-bezier(.2,.7,.2,1), box-shadow .3s}
+.card::before{content:"";position:absolute;inset:0 0 auto 0;height:2px;z-index:3;opacity:.55;
+  background:linear-gradient(90deg,transparent 0%,var(--accent) 38%,var(--gold) 50%,var(--accent) 62%,transparent 100%);background-size:240% 100%}
+.card:hover::before{opacity:1}
+@media (prefers-reduced-motion:no-preference){.card::before{animation:sweepline 5.5s linear infinite}}
+@keyframes sweepline{to{background-position:240% 0}}
+.card::after{content:"";position:absolute;inset:0;z-index:1;pointer-events:none;border-radius:inherit;opacity:0;transition:opacity .35s;
+  background:radial-gradient(260px circle at var(--mx,50%) var(--my,50%), rgba(255,255,255,.5), rgba(255,255,255,0) 60%);mix-blend-mode:soft-light}
+[data-theme="dark"] .card::after{background:radial-gradient(280px circle at var(--mx,50%) var(--my,50%), rgba(120,230,160,.25), rgba(0,0,0,0) 58%);mix-blend-mode:screen}
+.card:hover{transform:translateY(-4px);box-shadow:0 28px 64px -22px var(--glow), var(--shadow)}
+.card:hover::after{opacity:1}
+.card>*{position:relative;z-index:2}
+
+/* KPI grid */
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:16px}
+.kpi{padding:18px 18px 14px}
+.kpi .row{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+.kpi .lab{font-size:12.5px;font-weight:600;color:var(--ink-mute);letter-spacing:.2px}
+.kpi .ic{width:38px;height:38px;border-radius:11px;display:grid;place-items:center;flex:none;transition:transform .3s}
+.kpi:hover .ic{transform:scale(1.08) rotate(-4deg)}
+.kpi .ic svg{width:20px;height:20px}
+@media (prefers-reduced-motion:no-preference){
+  .kpi:nth-child(1) .ic{animation:iglow 3.6s ease-in-out infinite}
+  .kpi:nth-child(2) .ic{animation:iglow 3.6s ease-in-out .9s infinite}
+  .kpi:nth-child(3) .ic{animation:iglow 3.6s ease-in-out 1.8s infinite}
+  .kpi:nth-child(4) .ic{animation:iglow 3.6s ease-in-out 2.7s infinite}
+}
+@keyframes iglow{0%,100%{box-shadow:0 0 0 0 transparent}50%{box-shadow:0 0 18px -1px currentColor}}
+.val.flash{animation:vflash .85s ease}
+@keyframes vflash{0%{text-shadow:none}28%{text-shadow:0 0 22px var(--accent);color:var(--accent)}100%{text-shadow:none}}
+.kpi .val{font-size:clamp(26px,3.4vw,34px);font-weight:800;letter-spacing:-.02em;margin-top:12px;line-height:1;font-variant-numeric:tabular-nums}
+.kpi .val .unit{font-size:.55em;font-weight:700;color:var(--ink-mute);margin-left:4px}
+.kpi .foot{display:flex;align-items:center;gap:7px;margin-top:9px;font-size:12px;color:var(--ink-soft)}
+.kpi .trend{display:inline-flex;align-items:center;gap:3px;font-weight:700;padding:2px 7px;border-radius:999px}
+.kpi .trend.up{color:var(--ok);background:rgba(22,163,74,.12)}
+.kpi .trend.down{color:var(--bad);background:rgba(220,38,38,.12)}
+.kpi .spark{margin-top:10px;width:100%;height:34px;display:block}
+.tint-green{background:rgba(47,125,50,.14);color:var(--green-2)}
+.tint-gold{background:rgba(224,138,30,.16);color:var(--amber)}
+.tint-red{background:rgba(220,38,38,.13);color:var(--bad)}
+.tint-blue{background:rgba(37,99,235,.13);color:var(--info)}
+
+/* main grid */
+.grid{display:grid;grid-template-columns:2fr 1fr;gap:16px;margin-bottom:16px}
+.card .hd{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px 18px 6px}
+.card .hd h2{font-size:15px;font-weight:800;letter-spacing:-.01em}
+.card .hd .meta{font-size:12px;color:var(--ink-mute)}
+.chip{font-size:11.5px;font-weight:700;padding:4px 10px;border-radius:999px;border:1px solid var(--border);color:var(--ink-soft);background:var(--panel-2);transition:.2s}
+a.chip:hover{color:var(--accent);border-color:var(--accent)}
+
+/* charts */
+.chartwrap{padding:6px 12px 16px}
+svg.chart{width:100%;height:230px;display:block;overflow:visible}
+.legend{display:flex;gap:18px;flex-wrap:wrap;padding:0 18px 16px;font-size:12.5px;color:var(--ink-soft)}
+.legend i{display:inline-block;width:11px;height:11px;border-radius:3px;margin-right:7px;vertical-align:-1px}
+
+/* donut + category */
+.cats{padding:6px 18px 18px;display:flex;gap:20px;align-items:center;flex-wrap:wrap}
+.donut{flex:none}
+.catlist{flex:1;min-width:180px;display:flex;flex-direction:column;gap:11px}
+.catrow{display:grid;grid-template-columns:1fr auto;align-items:center;gap:6px 10px;font-size:13px}
+.catrow .nm{font-weight:600}
+.catrow .pc{font-weight:700;font-variant-numeric:tabular-nums;color:var(--ink-soft)}
+.catrow .bar{grid-column:1/3;height:8px;border-radius:99px;background:var(--panel-2);overflow:hidden}
+.catrow .bar i{display:block;height:100%;border-radius:99px;width:0;transition:width 1s cubic-bezier(.2,.7,.2,1)}
+
+/* requests table */
+.tablewrap{overflow-x:auto;padding:4px 6px 6px}
+table{width:100%;border-collapse:collapse;font-size:13.5px;min-width:560px}
+thead th{text-align:left;font-size:11.5px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:var(--ink-mute);padding:10px 14px;border-bottom:1px solid var(--border)}
+tbody td{padding:13px 14px;border-bottom:1px solid var(--border);vertical-align:middle}
+tbody tr{transition:background .15s}
+tbody tr:hover{background:var(--panel-2)}
+tbody tr:last-child td{border-bottom:0}
+tbody tr.rin{animation:rowin .5s both}
+@media (prefers-reduced-motion:reduce){tbody tr.rin{animation:none}}
+@keyframes rowin{from{opacity:0;transform:translateX(-14px)}to{opacity:1;transform:none}}
+.code{font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:.2px}
+.who{display:flex;align-items:center;gap:9px}
+.who .av{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;font-size:11px;font-weight:800;color:#16261b;flex:none}
+.when{color:var(--ink-soft);font-variant-numeric:tabular-nums}
+.badge{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:700;padding:5px 11px;border-radius:999px;white-space:nowrap}
+.badge .d{width:7px;height:7px;border-radius:50%}
+@media (prefers-reduced-motion:no-preference){.badge .d{animation:pulse 2.4s infinite}}
+.b-supply{background:rgba(37,99,235,.13);color:var(--info)} .b-supply .d{background:var(--info)}
+.b-approve{background:rgba(224,138,30,.16);color:var(--amber)} .b-approve .d{background:var(--amber)}
+.b-work{background:rgba(124,58,237,.13);color:#7c3aed} .b-work .d{background:#7c3aed}
+.b-done{background:rgba(22,163,74,.14);color:var(--ok)} .b-done .d{background:var(--ok)}
+
+/* mini request stats */
+.minis{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:16px}
+.mini{padding:16px 18px}
+.mini .lab{font-size:12px;color:var(--ink-mute);font-weight:600}
+.mini .val{font-size:30px;font-weight:800;margin-top:6px;line-height:1;font-variant-numeric:tabular-nums}
+.mini .val.accent{color:var(--accent)}
+
+.foot-note{margin-top:24px;font-size:12px;color:var(--ink-mute);text-align:center;line-height:1.7}
+
+/* section swap flash */
+main.swapping [data-reveal]{opacity:0;transform:translateY(20px) scale(.99);filter:blur(4px)}
+
+/* view transition for theme */
+@media (prefers-reduced-motion:no-preference){
+  ::view-transition-old(root),::view-transition-new(root){animation-duration:.55s}
+}
+
+/* responsive */
+@media (max-width:1080px){.kpis{grid-template-columns:repeat(2,1fr)}.minis{grid-template-columns:repeat(2,1fr)}.grid{grid-template-columns:1fr}}
+@media (max-width:760px){
+  nav.menu,.user .nm,.user .rl{display:none}
+  .user{padding:4px;border:0;background:transparent}
+  header.top{gap:10px;padding-left:14px;padding-right:14px}
+  .burger{display:grid}
+  .pagehead{flex-direction:column;align-items:stretch}
+  .segtabs{margin-left:0;width:100%;overflow:auto}
+}
+@media (max-width:520px){.kpis,.minis{grid-template-columns:1fr 1fr}.pagehead h1{font-size:26px}}
+</style>
+</head>
+<body>
+<div id="bg" aria-hidden="true">
+  <div class="layer sky"></div>
+  <div class="layer aurora"></div>
+  <div class="layer rays"></div>
+  <div class="layer field f1"></div>
+  <div class="layer field f2"></div>
+  <canvas id="motes"></canvas>
+  <div class="blur-veil"></div>
+</div>
+<div id="hud" aria-hidden="true"></div>
+<div id="drone" aria-hidden="true"><svg viewBox="0 0 64 40" fill="none"><g stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M6 12h14M44 12h14M10 12l4 8M54 12l-4 8"/><rect x="20" y="16" width="24" height="11" rx="4" fill="currentColor" fill-opacity=".22"/><circle cx="12" cy="10" r="4"/><circle cx="52" cy="10" r="4"/><path d="M27 27l-3 6M37 27l3 6"/></g></svg><span class="beam"></span></div>
+
+<!-- ===================== TOP BAR ===================== -->
+<header class="top">
+  <div class="brand">
+    <span class="mark" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18M12 8c0-3 2-5 5-5 0 3-2 5-5 5zM12 12c0-3-2-5-5-5 0 3 2 5 5 5zM12 13c0 3 3 4 6 4 0-3-3-4-6-4z"/></svg></span>
+    <span><b>ASB Group</b><small>AGRO-LOGISTICS</small></span>
+  </div>
+  <nav class="menu" aria-label="Главное меню">
+    <a href="#" class="active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg>Дашборд</a>
+    <a href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7h18M3 12h18M3 17h18"/></svg>Склад</a>
+    <a href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>Заявки</a>
+    <a href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 22h13V8l-5-5H3zM16 12h3l2 2v8h-5"/><circle cx="8" cy="14" r="1.5"/></svg>ГСМ</a>
+    <a href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 3h-4v9l-5 7a2 2 0 0 0 1.6 3.2h6.8A2 2 0 0 0 21 19l-5-7z"/></svg>Каталог</a>
+  </nav>
+  <div class="spacer"></div>
+  <button class="icon-btn" id="theme" title="Сменить тему" aria-label="Сменить тему"></button>
+  <button class="icon-btn" title="Уведомления" aria-label="Уведомления"><span class="dot"></span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9M13.7 21a2 2 0 0 1-3.4 0"/></svg></button>
+  <div class="user"><span class="av">АМ</span><span><span class="nm">Арманов Медеу</span><span class="rl">Администратор</span></span></div>
+  <button class="icon-btn burger" aria-label="Меню"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>
+</header>
+
+<main class="app" id="main">
+  <div class="pagehead">
+    <div class="title">
+      <span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1A1.7 1.7 0 0 0 9 19.4a1.7 1.7 0 0 0-1.9.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.9 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1A1.7 1.7 0 0 0 4.6 9a1.7 1.7 0 0 0-.3-1.9l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.9.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.9-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.9V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></span>
+      <div><h1 id="sec-title">Запчасти</h1><p class="sub">ТОО «АгроСервис-Батыс» · <b>г. Уральск, ЗКО</b> · учёт ТМЦ, заявки, техника</p></div>
+    </div>
+    <div class="segtabs" role="tablist" aria-label="Раздел склада">
+      <button class="active" data-sec="parts" role="tab" aria-selected="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"/></svg>Запчасти</button>
+      <button data-sec="fuel" role="tab" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 22h13V8l-5-5H3zM16 12h3l2 2v8h-5"/><circle cx="8" cy="14" r="1.5"/></svg>ГСМ</button>
+      <button data-sec="chem" role="tab" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 3h-4v9l-5 7a2 2 0 0 0 1.6 3.2h6.8A2 2 0 0 0 21 19l-5-7z"/><path d="M9 15h6"/></svg>Химия</button>
+    </div>
+  </div>
+
+  <div class="strip" data-reveal>
+    <span class="live"><span class="pulse"></span>Онлайн</span><span class="sep">·</span>
+    <span>Склад <b id="s-pos">1161</b> позиций — стоимость <b id="s-val">76 115 977</b> ₸</span><span class="sep">·</span>
+    <span class="danger">Нет в наличии: <b id="s-zero">20</b></span>
+    <span class="spacer" style="flex:1"></span>
+    <span class="chip">Обновлено 23.06.2026 06:40</span>
+  </div>
+
+  <section class="kpis" aria-label="Ключевые показатели">
+    <article class="card kpi" data-reveal>
+      <div class="row"><span class="lab">Позиций на складе</span><span class="ic tint-green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7l9-4 9 4v10l-9 4-9-4z"/><path d="M3 7l9 4 9-4M12 11v10"/></svg></span></div>
+      <div class="val" id="k-pos">0</div>
+      <div class="foot"><span class="trend up">▲ 2.1%</span><span>в каталоге</span></div>
+      <svg class="spark" viewBox="0 0 120 34" preserveAspectRatio="none" data-spark="40,60,55,70,68,80,76,90"></svg>
+    </article>
+    <article class="card kpi" data-reveal>
+      <div class="row"><span class="lab">Стоимость склада</span><span class="ic tint-gold"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9 9.5A2.5 2.5 0 0 1 14.5 9M9 14.5A2.5 2.5 0 0 0 14.5 15M12 7v10"/></svg></span></div>
+      <div class="val" id="k-val">0</div>
+      <div class="foot"><span class="trend up">▲ 4.8%</span><span>учётная цена × остаток</span></div>
+      <svg class="spark" viewBox="0 0 120 34" preserveAspectRatio="none" data-spark="50,52,60,58,66,64,74,82"></svg>
+    </article>
+    <article class="card kpi" data-reveal>
+      <div class="row"><span class="lab">Нет в наличии</span><span class="ic tint-red"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><path d="M12 9v4M12 17h.01"/></svg></span></div>
+      <div class="val" id="k-zero">0</div>
+      <div class="foot"><span class="trend down">▼ 5 поз.</span><span>позиций с нулём</span></div>
+      <svg class="spark" viewBox="0 0 120 34" preserveAspectRatio="none" data-spark="80,76,70,66,60,52,40,30" data-color="bad"></svg>
+    </article>
+    <article class="card kpi" data-reveal>
+      <div class="row"><span class="lab">Техники</span><span class="ic tint-blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 13h11l3-4h2l2 4v4h-2"/><circle cx="7" cy="18" r="2"/><circle cx="17" cy="18" r="2"/><path d="M3 13V7h6l2 3"/></svg></span></div>
+      <div class="val" id="k-tech">0</div>
+      <div class="foot"><span class="trend up">▲ 3 ед.</span><span id="k-techsub">40 видов техники</span></div>
+      <svg class="spark" viewBox="0 0 120 34" preserveAspectRatio="none" data-spark="55,58,57,62,64,63,66,70"></svg>
+    </article>
+  </section>
+
+  <section class="grid">
+    <article class="card" data-reveal>
+      <div class="hd"><h2>Динамика стоимости склада</h2><span class="meta">янв — июн 2026, млн ₸</span></div>
+      <div class="chartwrap"><svg class="chart" id="area" viewBox="0 0 640 230" preserveAspectRatio="none"></svg></div>
+      <div class="legend"><span><i style="background:var(--accent)"></i>Стоимость ТМЦ</span><span><i style="background:var(--amber)"></i>Поступления</span></div>
+    </article>
+    <article class="card" data-reveal>
+      <div class="hd"><h2>Структура остатков</h2><span class="chip" id="cat-total">1161 поз.</span></div>
+      <div class="cats"><svg class="donut" id="donut" width="148" height="148" viewBox="0 0 148 148"></svg><div class="catlist" id="catlist"></div></div>
+    </article>
+  </section>
+
+  <section class="minis" aria-label="Заявки">
+    <article class="card mini" data-reveal><div class="lab">Заявок всего</div><div class="val" id="m-all">0</div></article>
+    <article class="card mini" data-reveal><div class="lab">В работе</div><div class="val accent" id="m-work">0</div></article>
+    <article class="card mini" data-reveal><div class="lab">Выполнено</div><div class="val" id="m-done">0</div></article>
+    <article class="card mini" data-reveal><div class="lab">Мои заявки</div><div class="val" id="m-mine">0</div></article>
+  </section>
+
+  <section class="grid">
+    <article class="card" data-reveal>
+      <div class="hd"><h2>Последние заявки</h2><a href="#" class="chip">Все заявки →</a></div>
+      <div class="tablewrap"><table><thead><tr><th>№</th><th>Автор</th><th>Создана</th><th>Статус</th></tr></thead><tbody id="reqbody"></tbody></table></div>
+    </article>
+    <article class="card" data-reveal>
+      <div class="hd"><h2>Заявки по статусам</h2><span class="meta">всего 51</span></div>
+      <div class="chartwrap" style="padding-bottom:6px"><svg class="chart" id="bars" viewBox="0 0 360 230" style="height:210px"></svg></div>
+    </article>
+  </section>
+
+  <p class="foot-note">
+    ASB Group · ТОО «АгроСервис-Батыс» · Agro-Logistics · самодостаточный демонстрационный дашборд (один HTML-файл, без сервера и зависимостей).<br>
+    Данные раздела «Запчасти» — реальные с дашборда; «ГСМ» и «Химия» — иллюстративные.
+  </p>
+</main>
+
+<script>
+/* ============================================================ DATA ============================================================ */
+const SECTIONS = {
+  parts:{ title:"Запчасти",
+    kpi:{pos:1161, val:76.1, valDec:1, valUnit:"млн ₸", zero:20, tech:"66", techsub:"40 видов техники"},
+    strip:{pos:1161, val:76115977, zero:20},
+    area:[58,55,61,60,66,70], income:[8,5,12,7,14,11],
+    cats:[{nm:"Двигатель / ТНВД",v:34,c:"#1f9d55"},{nm:"Гидравлика",v:22,c:"#e08a1e"},{nm:"Ходовая / трансмиссия",v:19,c:"#2563eb"},{nm:"Электрика",v:13,c:"#7c3aed"},{nm:"Расходники / РТИ",v:12,c:"#dc2626"}],
+    catTotal:"1161 поз.", req:{all:51,work:9,done:15,mine:0},
+    rows:[["3-2026-0051","НАСЫРОВ БАГДАТ ТАЛГАТҰЛЫ","23.06.2026 06:34","supply","У снабжения"],["3-2026-0050","НАСЫРОВ БАГДАТ ТАЛГАТҰЛЫ","23.06.2026 06:09","approve","На согласовании"],["3-2026-0049","Аксамит Андрей Юрьевич","23.06.2026 05:44","approve","На согласовании"],["3-2026-0048","Аксамит Андрей Юрьевич","23.06.2026 05:11","approve","На согласовании"],["3-2026-0047","Аксамит Андрей Юрьевич","23.06.2026 05:06","approve","На согласовании"]],
+    bars:[["Создана",18,"#94a3b8"],["На согласовании",12,"#e08a1e"],["У снабжения",6,"#2563eb"],["В работе",9,"#7c3aed"],["Выполнено",15,"#16a34a"]] },
+  fuel:{ title:"ГСМ — горюче-смазочные материалы",
+    kpi:{pos:14, val:9.4, valDec:1, valUnit:"млн ₸", zero:2, tech:"66", techsub:"закреплено за техникой"},
+    strip:{pos:14, val:9380500, zero:2},
+    area:[7.5,8.1,9.0,8.4,9.9,9.4], income:[30,42,55,38,61,47],
+    cats:[{nm:"Дизель ДТ",v:62,c:"#e08a1e"},{nm:"Бензин АИ-92",v:14,c:"#1f9d55"},{nm:"Моторные масла",v:13,c:"#2563eb"},{nm:"Смазки / антифриз",v:11,c:"#7c3aed"}],
+    catTotal:"14 поз. · 38 200 л", req:{all:23,work:4,done:11,mine:0},
+    rows:[["Г-2026-0023","Кладовщик ГСМ","23.06.2026 07:10","work","В работе"],["Г-2026-0022","НАСЫРОВ БАГДАТ ТАЛГАТҰЛЫ","23.06.2026 06:20","supply","У снабжения"],["Г-2026-0021","Механизатор бригады №2","22.06.2026 19:02","done","Выполнено"],["Г-2026-0020","Аксамит Андрей Юрьевич","22.06.2026 17:48","approve","На согласовании"],["Г-2026-0019","Диспетчер автопарка","22.06.2026 16:31","done","Выполнено"]],
+    bars:[["Создана",5,"#94a3b8"],["На согласовании",3,"#e08a1e"],["У снабжения",4,"#2563eb"],["В работе",4,"#7c3aed"],["Выполнено",11,"#16a34a"]] },
+  chem:{ title:"Химия — СЗР и удобрения",
+    kpi:{pos:87, val:21.7, valDec:1, valUnit:"млн ₸", zero:5, tech:"—", techsub:"опрыскиватели / разбрасыватели"},
+    strip:{pos:87, val:21740300, zero:5},
+    area:[12,15,19,17,23,21.7], income:[20,35,48,30,52,40],
+    cats:[{nm:"Гербициды",v:38,c:"#1f9d55"},{nm:"Удобрения (NPK)",v:27,c:"#e08a1e"},{nm:"Фунгициды",v:16,c:"#2563eb"},{nm:"Протравители",v:11,c:"#7c3aed"},{nm:"Инсектициды",v:8,c:"#dc2626"}],
+    catTotal:"87 поз. · сезон 2026", req:{all:34,work:7,done:13,mine:0},
+    rows:[["Х-2026-0034","Агроном-семеновод","23.06.2026 07:25","approve","На согласовании"],["Х-2026-0033","НАСЫРОВ БАГДАТ ТАЛГАТҰЛЫ","23.06.2026 06:48","supply","У снабжения"],["Х-2026-0032","Бригадир поля №4","23.06.2026 05:55","work","В работе"],["Х-2026-0031","Аксамит Андрей Юрьевич","22.06.2026 20:14","done","Выполнено"],["Х-2026-0030","Кладовщик СЗР","22.06.2026 18:39","approve","На согласовании"]],
+    bars:[["Создана",7,"#94a3b8"],["На согласовании",5,"#e08a1e"],["У снабжения",2,"#2563eb"],["В работе",7,"#7c3aed"],["Выполнено",13,"#16a34a"]] }
+};
+const BADGE={supply:"b-supply",approve:"b-approve",work:"b-work",done:"b-done"};
+const AVCOL=["#f6c447","#3ba14a","#2563eb","#e08a1e","#7c3aed"];
+
+const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+const reduce=matchMedia("(prefers-reduced-motion:reduce)").matches;
+const easeOut=p=>1-Math.pow(1-p,3);
+
+/* ---------- count-up ---------- */
+function fmt(v,dec){const s=Math.abs(v).toFixed(dec);let[i,f]=s.split(".");i=i.replace(/\B(?=(\d{3})+(?!\d))/g," ");return(v<0?"-":"")+(f?i+","+f:i);}
+function countUp(el,to,dec=0){
+  if(el._raf)cancelAnimationFrame(el._raf);
+  el.dataset.t=to;el.dataset.d=dec;
+  if(reduce){el.textContent=fmt(to,dec);return;}
+  const dur=1100,t0=performance.now();
+  const tick=t=>{let p=Math.min(1,(t-t0)/dur);el.textContent=fmt(to*easeOut(p),dec);if(p<1)el._raf=requestAnimationFrame(tick);};
+  el._raf=requestAnimationFrame(tick);
+}
+/* live "feed" nudge — re-settles to the same canonical value with a flash */
+function nudge(el){
+  const to=+el.dataset.t||0,dec=+el.dataset.d||0,from=to*0.955,dur=620,t0=performance.now();
+  if(el._raf)cancelAnimationFrame(el._raf);
+  const tick=t=>{let p=Math.min(1,(t-t0)/dur);el.textContent=fmt(from+(to-from)*easeOut(p),dec);if(p<1)el._raf=requestAnimationFrame(tick);};
+  el._raf=requestAnimationFrame(tick);
+  const v=el.closest('.val')||el;v.classList.add('flash');setTimeout(()=>v.classList.remove('flash'),850);
+}
+function startLiveFeed(){
+  if(reduce)return;
+  const sels=['#k-pos','#k-zero','#m-all','#m-work','#m-done'];
+  setInterval(()=>{if(document.hidden)return;const el=$(sels[Math.floor(Math.random()*sels.length)]);if(el)nudge(el);},3200);
+}
+
+/* ---------- sparklines (animated draw) ---------- */
+function sparkPath(svg){
+  const pts=svg.dataset.spark.split(",").map(Number),w=120,h=34,max=Math.max(...pts),min=Math.min(...pts),pad=4;
+  const xs=i=>i*(w/(pts.length-1)), ys=v=>h-pad-((v-min)/(max-min||1))*(h-pad*2);
+  let d="M"+xs(0)+" "+ys(pts[0]);pts.forEach((v,i)=>{if(i)d+="L"+xs(i)+" "+ys(v)});
+  const col=svg.dataset.color==="bad"?"var(--bad)":"var(--accent)", area=d+`L${w} ${h}L0 ${h}Z`, id="g"+Math.random().toString(36).slice(2,7);
+  svg.innerHTML=`<defs><linearGradient id="${id}" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="${col}" stop-opacity=".35"/><stop offset="1" stop-color="${col}" stop-opacity="0"/></linearGradient></defs>
+    <path d="${area}" fill="url(#${id})"/><path class="ln" d="${d}" fill="none" stroke="${col}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>`;
+  const p=svg.querySelector(".ln");if(!reduce){const L=p.getTotalLength();p.style.strokeDasharray=L;p.style.strokeDashoffset=L;p.animate([{strokeDashoffset:L},{strokeDashoffset:0}],{duration:900,delay:300,easing:"ease-out",fill:"forwards"});}
+}
+
+/* ---------- area chart ---------- */
+function drawArea(d){
+  const svg=$("#area"),W=640,H=230,pad=26,max=Math.max(...d.area)*1.18;
+  const xs=i=>pad+i*((W-pad*2)/(d.area.length-1)), ys=v=>H-pad-(v/max)*(H-pad*1.6);
+  const line=d.area.map((v,i)=>(i?"L":"M")+xs(i).toFixed(1)+" "+ys(v).toFixed(1)).join("");
+  const area=line+`L${xs(d.area.length-1)} ${H-pad}L${xs(0)} ${H-pad}Z`;
+  let g="";for(let i=0;i<=4;i++){const y=pad+i*((H-pad*1.6-pad)/4);g+=`<line x1="${pad}" x2="${W-pad}" y1="${y}" y2="${y}" stroke="var(--border)" stroke-width="1"/>`}
+  const months=["янв","фев","мар","апр","май","июн"];
+  const lab=months.map((m,i)=>`<text x="${xs(i)}" y="${H-6}" fill="var(--ink-mute)" font-size="11" text-anchor="middle">${m}</text>`).join("");
+  const bw=14,bmax=Math.max(...d.income);
+  const bars=d.income.map((v,i)=>{const bh=(v/bmax)*60;return `<rect x="${xs(i)-bw/2}" y="${H-pad}" width="${bw}" height="0" rx="3" fill="var(--amber)" opacity=".55">${reduce?'':`<animate attributeName="height" to="${bh}" dur="0.7s" begin="${.2+i*.06}s" fill="freeze"/><animate attributeName="y" to="${H-pad-bh}" dur="0.7s" begin="${.2+i*.06}s" fill="freeze"/>`}${reduce?`<animate attributeName="height" to="${bh}"/>`:''}</rect>`}).join("");
+  const dots=d.area.map((v,i)=>`<circle cx="${xs(i)}" cy="${ys(v)}" r="0" fill="var(--accent)" stroke="var(--panel)" stroke-width="2">${reduce?`<animate attributeName="r" to="3.5"/>`:`<animate attributeName="r" from="0" to="3.5" dur="0.4s" begin="${.6+i*.07}s" fill="freeze"/>`}</circle>`).join("");
+  svg.innerHTML=`<defs><linearGradient id="ag" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="var(--accent)" stop-opacity=".34"/><stop offset="1" stop-color="var(--accent)" stop-opacity="0"/></linearGradient></defs>${g}${bars}<path d="${area}" fill="url(#ag)" opacity="0">${reduce?'<animate attributeName="opacity" to="1"/>':'<animate attributeName="opacity" to="1" dur="0.6s" begin="0.5s" fill="freeze"/>'}</path><path class="ln" d="${line}" fill="none" stroke="var(--accent)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>${dots}${lab}`;
+  const p=svg.querySelector(".ln");if(!reduce){const L=p.getTotalLength();p.style.strokeDasharray=L;p.style.strokeDashoffset=L;p.animate([{strokeDashoffset:L},{strokeDashoffset:0}],{duration:1100,easing:"cubic-bezier(.4,.6,.2,1)",fill:"forwards"});}
+}
+
+/* ---------- donut (animated sweep) ---------- */
+function drawDonut(d){
+  const svg=$("#donut"),cx=74,cy=74,r=54,sw=20,C=2*Math.PI*r,tot=d.cats.reduce((a,c)=>a+c.v,0);
+  let acc=0,seg="";
+  d.cats.forEach(c=>{const frac=c.v/tot,len=frac*C,rot=acc*360-90;
+    seg+=`<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${c.c}" stroke-width="${sw}" stroke-dasharray="${len} ${C}" stroke-dashoffset="${reduce?0:len}" transform="rotate(${rot} ${cx} ${cy})" stroke-linecap="butt">${reduce?'':`<animate attributeName="stroke-dashoffset" from="${len}" to="0" dur="0.7s" begin="${acc*0.45}s" fill="freeze" calcMode="spline" keyTimes="0;1" keySplines="0.2 0.7 0.2 1"/>`}</circle>`;
+    acc+=frac;});
+  svg.innerHTML=`<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="var(--border)" stroke-width="${sw}"/>${seg}<text x="${cx}" y="${cy-4}" text-anchor="middle" font-size="13" font-weight="800" fill="var(--ink)">${d.cats.length} групп</text><text x="${cx}" y="${cy+14}" text-anchor="middle" font-size="11" fill="var(--ink-mute)">остатки</text>`;
+  $("#catlist").innerHTML=d.cats.map(c=>`<div class="catrow"><span class="nm">${c.nm}</span><span class="pc">${(c.v/tot*100).toFixed(0)}%</span><span class="bar"><i data-w="${(c.v/tot*100).toFixed(0)}" style="background:${c.c}"></i></span></div>`).join("");
+  requestAnimationFrame(()=>$$("#catlist .bar i").forEach((i,k)=>setTimeout(()=>i.style.width=i.dataset.w+"%",reduce?0:120+k*90)));
+  $("#cat-total").textContent=d.catTotal;
+}
+
+/* ---------- status bars ---------- */
+function drawBars(d){
+  const svg=$("#bars"),W=360,H=210,pad=30,gap=16,max=Math.max(...d.bars.map(b=>b[1]))*1.15,bw=(W-pad*2-gap*(d.bars.length-1))/d.bars.length;
+  let out="";
+  d.bars.forEach((b,i)=>{const x=pad+i*(bw+gap),bh=(b[1]/max)*(H-pad*2),y=H-pad-bh,bg=i*.07;
+    out+=`<rect x="${x}" y="${H-pad}" width="${bw}" height="0" rx="7" fill="${b[2]}">${reduce?`<animate attributeName="height" to="${bh}"/><animate attributeName="y" to="${y}"/>`:`<animate attributeName="height" to="${bh}" dur="0.6s" begin="${bg}s" fill="freeze" calcMode="spline" keyTimes="0;1" keySplines="0.2 0.8 0.2 1"/><animate attributeName="y" to="${y}" dur="0.6s" begin="${bg}s" fill="freeze" calcMode="spline" keyTimes="0;1" keySplines="0.2 0.8 0.2 1"/>`}</rect>
+      <text x="${x+bw/2}" y="${y-7}" text-anchor="middle" font-size="13" font-weight="800" fill="var(--ink)" opacity="0">${b[1]}${reduce?'<animate attributeName="opacity" to="1"/>':`<animate attributeName="opacity" to="1" dur="0.3s" begin="${bg+.4}s" fill="freeze"/>`}</text>
+      <text x="${x+bw/2}" y="${H-10}" text-anchor="middle" font-size="9.5" fill="var(--ink-mute)">${b[0].split(" ")[0]}</text>`;});
+  svg.innerHTML=out;
+}
+
+/* ---------- render section ---------- */
+function render(key){
+  const d=SECTIONS[key];
+  $("#sec-title").textContent=d.title;
+  countUp($("#k-pos"),d.kpi.pos);
+  $("#k-val").innerHTML=`<span class="num">0</span><span class="unit">${d.kpi.valUnit}</span>`;
+  countUp($("#k-val .num"),d.kpi.val,d.kpi.valDec);
+  countUp($("#k-zero"),d.kpi.zero);
+  if(/^\d+$/.test(d.kpi.tech))countUp($("#k-tech"),+d.kpi.tech);else $("#k-tech").textContent=d.kpi.tech;
+  $("#k-techsub").textContent=d.kpi.techsub;
+  countUp($("#s-pos"),d.strip.pos); countUp($("#s-val"),d.strip.val); countUp($("#s-zero"),d.strip.zero);
+  countUp($("#m-all"),d.req.all); countUp($("#m-work"),d.req.work); countUp($("#m-done"),d.req.done); countUp($("#m-mine"),d.req.mine);
+  $("#reqbody").innerHTML=d.rows.map((r,i)=>{const init=r[1].split(" ").slice(0,2).map(w=>w[0]).join("").toUpperCase();
+    return `<tr class="rin" style="animation-delay:${i*70}ms"><td class="code">${r[0]}</td><td><span class="who"><span class="av" style="background:${AVCOL[i%AVCOL.length]}">${init}</span>${r[1]}</span></td><td class="when">${r[2]}</td><td><span class="badge ${BADGE[r[3]]}"><span class="d"></span>${r[4]}</span></td></tr>`;}).join("");
+  drawArea(d); drawDonut(d); drawBars(d);
+}
+
+/* ---------- entrance reveal ---------- */
+function reveal(stagger=80){
+  const els=$$('[data-reveal]');
+  els.forEach((el,i)=>{el.classList.remove('in');el.style.transitionDelay=(i*stagger)+'ms';});
+  requestAnimationFrame(()=>requestAnimationFrame(()=>els.forEach(el=>el.classList.add('in'))));
+}
+
+/* ---------- cursor spotlight on glass cards ---------- */
+if(matchMedia('(hover:hover) and (pointer:fine)').matches){
+  document.addEventListener('pointermove',e=>{
+    const c=e.target.closest('.card');if(!c)return;
+    const r=c.getBoundingClientRect();
+    c.style.setProperty('--mx',(e.clientX-r.left)+'px');
+    c.style.setProperty('--my',(e.clientY-r.top)+'px');
+  },{passive:true});
+}
+
+/* ---------- background parallax + pollen motes ---------- */
+(function(){
+  if(reduce)return;
+  const sky=$('#bg .sky'),f1=$('#bg .f1'),f2=$('#bg .f2');let tx=0,ty=0;
+  addEventListener('pointermove',e=>{tx=(e.clientX/innerWidth-.5);ty=(e.clientY/innerHeight-.5);},{passive:true});
+  (function loop(){sky.style.transform=`translate3d(${tx*-10}px,${ty*-6}px,0)`;f1.style.transform=`translate3d(${tx*-26}px,${ty*-10}px,0)`;f2.style.transform=`translate3d(${tx*-40}px,${ty*-14}px,0)`;requestAnimationFrame(loop);})();
+
+  const cv=$('#motes'),ctx=cv.getContext('2d');let W,H,dots=[],run=true;
+  function size(){W=cv.width=innerWidth*devicePixelRatio;H=cv.height=innerHeight*devicePixelRatio;}
+  size();addEventListener('resize',size);
+  const N=Math.min(46,Math.round(innerWidth/26));
+  for(let i=0;i<N;i++)dots.push({x:Math.random(),y:Math.random(),r:(Math.random()*2+.8),s:Math.random()*.12+.03,d:Math.random()*.4-.2,o:Math.random()*.5+.2,g:Math.random()<.4});
+  document.addEventListener('visibilitychange',()=>{run=!document.hidden;if(run)tick();});
+  function tick(){
+    if(!run)return;ctx.clearRect(0,0,W,H);
+    const dark=document.documentElement.dataset.theme==='dark';
+    for(const p of dots){p.y-=p.s/100;p.x+=p.d/600;if(p.y<-.05){p.y=1.05;p.x=Math.random();}
+      const x=p.x*W,y=p.y*H,r=p.r*devicePixelRatio*(p.g?1.4:1);
+      ctx.beginPath();ctx.arc(x,y,r,0,7);
+      const col=p.g?(dark?'120,230,160':'255,210,90'):(dark?'150,220,170':'255,255,255');
+      ctx.fillStyle=`rgba(${col},${p.o*(dark?.5:.6)})`;ctx.shadowBlur=10*devicePixelRatio;ctx.shadowColor=`rgba(${col},${p.o})`;ctx.fill();ctx.shadowBlur=0;}
+    requestAnimationFrame(tick);
+  }
+  tick();
+})();
+
+/* ---------- section switch (re-animate) ---------- */
+$$('.segtabs button').forEach(b=>b.addEventListener('click',()=>{
+  if(b.classList.contains('active'))return;
+  $$('.segtabs button').forEach(x=>{x.classList.remove('active');x.setAttribute('aria-selected','false')});
+  b.classList.add('active');b.setAttribute('aria-selected','true');
+  const main=$('#main');main.classList.add('swapping');
+  setTimeout(()=>{render(b.dataset.sec);main.classList.remove('swapping');reveal(45);},reduce?0:280);
+}));
+
+/* ---------- theme toggle with View Transitions ---------- */
+const sun=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4.5"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M5 5l1.4 1.4M17.6 17.6 19 19M19 5l-1.4 1.4M6.4 17.6 5 19"/></svg>`;
+const moon=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>`;
+const tbtn=$("#theme");
+function setTheme(t){document.documentElement.dataset.theme=t;tbtn.innerHTML=t==="dark"?sun:moon;try{localStorage.setItem("asb-theme",t)}catch(e){}}
+function toggleTheme(){const next=document.documentElement.dataset.theme==="dark"?"light":"dark";
+  if(document.startViewTransition&&!reduce)document.startViewTransition(()=>setTheme(next));else setTheme(next);}
+tbtn.addEventListener('click',toggleTheme);
+(function(){let t="light";try{t=localStorage.getItem("asb-theme")||(matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light')}catch(e){}setTheme(t);})();
+
+/* ---------- boot ---------- */
+$$('.spark').forEach(sparkPath);
+render('parts');
+reveal(80);
+startLiveFeed();
+</script>
+</body>
+</html>
