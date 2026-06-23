@@ -79,6 +79,34 @@ h1,h2,h3,p{margin:0}
   #bg .aurora{animation:aurora 18s ease-in-out infinite alternate}
 }
 @keyframes aurora{from{transform:translate3d(-3%,-1%,0) scale(1)}to{transform:translate3d(4%,2%,0) scale(1.08)}}
+/* sun god-rays */
+#bg .rays{background:repeating-conic-gradient(from 0deg at 80% 7%, rgba(255,240,190,.11) 0deg 2.4deg, transparent 2.4deg 12deg);mix-blend-mode:screen;opacity:.7}
+[data-theme="dark"] #bg .rays{background:repeating-conic-gradient(from 0deg at 30% 14%, rgba(80,220,140,.07) 0deg 2.4deg, transparent 2.4deg 14deg);opacity:.8}
+@media (prefers-reduced-motion:no-preference){#bg .rays{animation:rayspin 70s linear infinite}}
+@keyframes rayspin{to{transform:rotate(360deg)}}
+/* scanning agro-drone — flies OVER the dashboard as a HUD scanner */
+#drone{position:fixed;top:11%;left:0;width:72px;height:44px;z-index:45;pointer-events:none;
+  color:var(--amber);filter:drop-shadow(0 0 12px rgba(224,138,30,.85))}
+[data-theme="dark"] #drone{color:#6effa0;filter:drop-shadow(0 0 16px rgba(94,255,150,.9))}
+#drone svg{width:72px;height:44px;position:relative;z-index:2;display:block}
+#drone .beam{position:absolute;top:32px;left:50%;width:120px;height:54vh;transform:translateX(-50%);transform-origin:top center;
+  background:linear-gradient(180deg, currentColor, transparent 80%);opacity:.16;clip-path:polygon(45% 0,55% 0,100% 100%,0 100%);filter:blur(4px)}
+@media (prefers-reduced-motion:no-preference){
+  #drone{animation:fly 20s linear infinite}
+  #drone .beam{animation:scan 3.2s ease-in-out infinite}
+}
+@media (prefers-reduced-motion:reduce){#drone{display:none}}
+@keyframes fly{0%{transform:translate(-14vw,0)}48%{transform:translate(50vw,30px)}52%{transform:translate(54vw,30px)}100%{transform:translate(114vw,0)}}
+@keyframes scan{0%,100%{transform:translateX(-50%) skewX(-10deg)}50%{transform:translateX(-50%) skewX(10deg)}}
+/* HUD scanline overlay */
+#hud{position:fixed;inset:0;z-index:60;pointer-events:none;overflow:hidden;
+  background:repeating-linear-gradient(0deg, rgba(120,200,150,.05) 0 1px, transparent 1px 5px);mix-blend-mode:overlay;opacity:.35}
+[data-theme="dark"] #hud{opacity:.5}
+#hud::after{content:"";position:absolute;left:0;right:0;height:160px;
+  background:linear-gradient(180deg, transparent, rgba(120,230,160,.12), transparent)}
+@media (prefers-reduced-motion:no-preference){#hud::after{animation:scanv 8s linear infinite}}
+@media (prefers-reduced-motion:reduce){#hud{display:none}}
+@keyframes scanv{0%{transform:translateY(-180px)}100%{transform:translateY(100vh)}}
 
 /* ---------- entrance choreography ---------- */
 [data-reveal]{opacity:0;transform:translateY(26px) scale(.985);filter:blur(6px);
@@ -151,6 +179,11 @@ nav.menu a.active svg{opacity:1}
 .segtabs button:hover{transform:translateY(-1px)}
 .segtabs button svg{width:16px;height:16px}
 .segtabs button.active{background:var(--accent);color:var(--accent-ink);box-shadow:var(--shadow-sm)}
+nav.menu a.active,.segtabs button.active{
+  background-image:linear-gradient(115deg,var(--accent),var(--green-2),var(--gold),var(--accent));background-size:260% 100%;
+  box-shadow:0 6px 22px -6px var(--glow)}
+@media (prefers-reduced-motion:no-preference){nav.menu a.active,.segtabs button.active{animation:shift 4.5s linear infinite}}
+@keyframes shift{to{background-position:260% 0}}
 
 /* status strip */
 .strip{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin:20px 0 22px;padding:13px 18px;border-radius:var(--radius-sm);
@@ -167,7 +200,11 @@ nav.menu a.active svg{opacity:1}
   backdrop-filter:blur(var(--blur));-webkit-backdrop-filter:blur(var(--blur));
   box-shadow:var(--shadow);position:relative;overflow:hidden;
   transition:transform .3s cubic-bezier(.2,.7,.2,1), box-shadow .3s}
-.card::before{content:"";position:absolute;inset:0 0 auto 0;height:1px;z-index:2;background:linear-gradient(90deg,transparent,var(--panel-line),transparent)}
+.card::before{content:"";position:absolute;inset:0 0 auto 0;height:2px;z-index:3;opacity:.55;
+  background:linear-gradient(90deg,transparent 0%,var(--accent) 38%,var(--gold) 50%,var(--accent) 62%,transparent 100%);background-size:240% 100%}
+.card:hover::before{opacity:1}
+@media (prefers-reduced-motion:no-preference){.card::before{animation:sweepline 5.5s linear infinite}}
+@keyframes sweepline{to{background-position:240% 0}}
 .card::after{content:"";position:absolute;inset:0;z-index:1;pointer-events:none;border-radius:inherit;opacity:0;transition:opacity .35s;
   background:radial-gradient(260px circle at var(--mx,50%) var(--my,50%), rgba(255,255,255,.5), rgba(255,255,255,0) 60%);mix-blend-mode:soft-light}
 [data-theme="dark"] .card::after{background:radial-gradient(280px circle at var(--mx,50%) var(--my,50%), rgba(120,230,160,.25), rgba(0,0,0,0) 58%);mix-blend-mode:screen}
@@ -183,6 +220,15 @@ nav.menu a.active svg{opacity:1}
 .kpi .ic{width:38px;height:38px;border-radius:11px;display:grid;place-items:center;flex:none;transition:transform .3s}
 .kpi:hover .ic{transform:scale(1.08) rotate(-4deg)}
 .kpi .ic svg{width:20px;height:20px}
+@media (prefers-reduced-motion:no-preference){
+  .kpi:nth-child(1) .ic{animation:iglow 3.6s ease-in-out infinite}
+  .kpi:nth-child(2) .ic{animation:iglow 3.6s ease-in-out .9s infinite}
+  .kpi:nth-child(3) .ic{animation:iglow 3.6s ease-in-out 1.8s infinite}
+  .kpi:nth-child(4) .ic{animation:iglow 3.6s ease-in-out 2.7s infinite}
+}
+@keyframes iglow{0%,100%{box-shadow:0 0 0 0 transparent}50%{box-shadow:0 0 18px -1px currentColor}}
+.val.flash{animation:vflash .85s ease}
+@keyframes vflash{0%{text-shadow:none}28%{text-shadow:0 0 22px var(--accent);color:var(--accent)}100%{text-shadow:none}}
 .kpi .val{font-size:clamp(26px,3.4vw,34px);font-weight:800;letter-spacing:-.02em;margin-top:12px;line-height:1;font-variant-numeric:tabular-nums}
 .kpi .val .unit{font-size:.55em;font-weight:700;color:var(--ink-mute);margin-left:4px}
 .kpi .foot{display:flex;align-items:center;gap:7px;margin-top:9px;font-size:12px;color:var(--ink-soft)}
@@ -276,11 +322,14 @@ main.swapping [data-reveal]{opacity:0;transform:translateY(20px) scale(.99);filt
 <div id="bg" aria-hidden="true">
   <div class="layer sky"></div>
   <div class="layer aurora"></div>
+  <div class="layer rays"></div>
   <div class="layer field f1"></div>
   <div class="layer field f2"></div>
   <canvas id="motes"></canvas>
   <div class="blur-veil"></div>
 </div>
+<div id="hud" aria-hidden="true"></div>
+<div id="drone" aria-hidden="true"><svg viewBox="0 0 64 40" fill="none"><g stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M6 12h14M44 12h14M10 12l4 8M54 12l-4 8"/><rect x="20" y="16" width="24" height="11" rx="4" fill="currentColor" fill-opacity=".22"/><circle cx="12" cy="10" r="4"/><circle cx="52" cy="10" r="4"/><path d="M27 27l-3 6M37 27l3 6"/></g></svg><span class="beam"></span></div>
 
 <!-- ===================== TOP BAR ===================== -->
 <header class="top">
@@ -425,10 +474,24 @@ const easeOut=p=>1-Math.pow(1-p,3);
 function fmt(v,dec){const s=Math.abs(v).toFixed(dec);let[i,f]=s.split(".");i=i.replace(/\B(?=(\d{3})+(?!\d))/g," ");return(v<0?"-":"")+(f?i+","+f:i);}
 function countUp(el,to,dec=0){
   if(el._raf)cancelAnimationFrame(el._raf);
+  el.dataset.t=to;el.dataset.d=dec;
   if(reduce){el.textContent=fmt(to,dec);return;}
   const dur=1100,t0=performance.now();
   const tick=t=>{let p=Math.min(1,(t-t0)/dur);el.textContent=fmt(to*easeOut(p),dec);if(p<1)el._raf=requestAnimationFrame(tick);};
   el._raf=requestAnimationFrame(tick);
+}
+/* live "feed" nudge — re-settles to the same canonical value with a flash */
+function nudge(el){
+  const to=+el.dataset.t||0,dec=+el.dataset.d||0,from=to*0.955,dur=620,t0=performance.now();
+  if(el._raf)cancelAnimationFrame(el._raf);
+  const tick=t=>{let p=Math.min(1,(t-t0)/dur);el.textContent=fmt(from+(to-from)*easeOut(p),dec);if(p<1)el._raf=requestAnimationFrame(tick);};
+  el._raf=requestAnimationFrame(tick);
+  const v=el.closest('.val')||el;v.classList.add('flash');setTimeout(()=>v.classList.remove('flash'),850);
+}
+function startLiveFeed(){
+  if(reduce)return;
+  const sels=['#k-pos','#k-zero','#m-all','#m-work','#m-done'];
+  setInterval(()=>{if(document.hidden)return;const el=$(sels[Math.floor(Math.random()*sels.length)]);if(el)nudge(el);},3200);
 }
 
 /* ---------- sparklines (animated draw) ---------- */
@@ -565,6 +628,7 @@ tbtn.addEventListener('click',toggleTheme);
 $$('.spark').forEach(sparkPath);
 render('parts');
 reveal(80);
+startLiveFeed();
 </script>
 </body>
 </html>
